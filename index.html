@@ -165,22 +165,22 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
     <div class="feat">
       <div class="feat-icon">🏛️</div>
       <div class="feat-title">Ceiling / Dead</div>
-      <div class="feat-desc">Tap ceiling → dead load arrows appear instantly</div>
+      <div class="feat-desc">Tap ceiling → grid of dead load arrows</div>
     </div>
     <div class="feat">
       <div class="feat-icon">▬</div>
       <div class="feat-title">Slab</div>
-      <div class="feat-desc">Tap slab → shows load distribution downward</div>
+      <div class="feat-desc">Tap slab → adjacent row of arrows</div>
     </div>
     <div class="feat">
       <div class="feat-icon">▪</div>
       <div class="feat-title">Column</div>
-      <div class="feat-desc">Tap column → axial load path to foundation</div>
+      <div class="feat-desc">Tap column → stacked arrows down to foundation</div>
     </div>
     <div class="feat">
       <div class="feat-icon">🧍</div>
       <div class="feat-title">Live Load</div>
-      <div class="feat-desc">Tap where person stands → live load arrows</div>
+      <div class="feat-desc">Tap where person stands → single load arrow</div>
     </div>
   </div>
 
@@ -227,9 +227,9 @@ let mode = 'view';
 
 const COLORS = { ceil:0x4A9EFF, slab:0xFFCC00, col:0xA78BFA, live:0xFF6B35 };
 const LABELS = {
-  ceil:'Ceiling dead load placed',
-  slab:'Slab placed — dead load arrows active',
-  col:'Column placed — load path to foundation',
+  ceil:'Ceiling dead load grid placed',
+  slab:'Slab placed — adjacent load arrows active',
+  col:'Column placed — stacked load path to foundation',
   live:'Live load placed'
 };
 const HINTS = {
@@ -363,23 +363,49 @@ function createMarker(type, color) {
   const group = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({ color });
 
-  if (type === 'col') {
-    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.04), mat);
-    shaft.position.y = 0.15;
-    group.add(shaft);
-    const base = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.1), mat);
-    group.add(base);
-  } else if (type === 'slab') {
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.02, 0.15), mat);
-    group.add(slab);
-  } else {
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,0.15,12), mat);
-    shaft.position.y = 0.075;
-    group.add(shaft);
-    const head = new THREE.Mesh(new THREE.ConeGeometry(0.025,0.05,12), mat);
-    head.position.y = 0.175;
-    group.add(head);
+  function makeArrow(x, y, z) {
+    const arrowGroup = new THREE.Group();
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 10), mat);
+    shaft.position.y = 0.06;
+    arrowGroup.add(shaft);
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.04, 10), mat);
+    head.position.y = 0.14;
+    arrowGroup.add(head);
+    arrowGroup.position.set(x, y, z);
+    return arrowGroup;
   }
+
+  if (type === 'ceil') {
+    // Plane/grid of arrows simulating distributed ceiling load
+    const spacing = 0.12;
+    const gridSize = 3;
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        const x = (i - (gridSize-1)/2) * spacing;
+        const z = (j - (gridSize-1)/2) * spacing;
+        group.add(makeArrow(x, 0, z));
+      }
+    }
+  } else if (type === 'slab') {
+    // Row of adjacent arrows side by side
+    const count = 5;
+    const spacing = 0.07;
+    for (let i = 0; i < count; i++) {
+      const x = (i - (count-1)/2) * spacing;
+      group.add(makeArrow(x, 0, 0));
+    }
+  } else if (type === 'col') {
+    // Arrows stacked one after another vertically (load path down to foundation)
+    const count = 4;
+    const vSpacing = 0.16;
+    for (let i = 0; i < count; i++) {
+      group.add(makeArrow(0, -i * vSpacing, 0));
+    }
+  } else {
+    // Live load - single arrow
+    group.add(makeArrow(0, 0, 0));
+  }
+
   return group;
 }
 
