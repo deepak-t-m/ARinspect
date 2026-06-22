@@ -375,56 +375,72 @@ function initThree() {
 }
 
 async function onSelect() {
-  if (mode === 'view') return;
-  if (!reticle.visible) { toast('No surface detected here yet'); return; }
-  if (pending) return; // already mid-resize
+  try {
+    if (mode === 'view') return;
+    if (!reticle.visible) { toast('No surface detected here yet'); return; }
+    if (pending) { toast('Finish current placement first'); return; }
 
-  const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
-  const color = COLORS[mode];
+    const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
+    const color = COLORS[mode];
 
-  if (mode === 'slab' || mode === 'col') {
-    // Open resize panel instead of placing immediately
-    pending = { type: mode, color, pos, dimension: 1.0, obj: null };
-    pending.obj = createMarker(mode, color, pending.dimension);
-    pending.obj.position.copy(pos);
-    scene.add(pending.obj);
+    if (mode === 'slab' || mode === 'col') {
+      pending = { type: mode, color, pos, dimension: 1.0, obj: null };
+      pending.obj = createMarker(mode, color, pending.dimension);
+      pending.obj.position.copy(pos);
+      scene.add(pending.obj);
 
-    const panel = document.getElementById('resizePanel');
-    const title = document.getElementById('resizeTitle');
-    const slider = document.getElementById('resizeSlider');
-    title.textContent = mode === 'slab' ? 'Slab width' : 'Column height';
-    slider.value = pending.dimension;
-    updateResizeLabel(pending.dimension, 'm');
-    panel.style.display = 'block';
-    document.getElementById('toolbar').style.display = 'none';
-    setStatus('Drag slider to size — then tap Place');
-    return;
+      const panel = document.getElementById('resizePanel');
+      const title = document.getElementById('resizeTitle');
+      const slider = document.getElementById('resizeSlider');
+      title.textContent = mode === 'slab' ? 'Slab width' : 'Column height';
+      slider.value = pending.dimension;
+      updateResizeLabel(pending.dimension, 'm');
+      panel.style.display = 'block';
+      document.getElementById('toolbar').style.display = 'none';
+      setStatus('Drag slider to size — then tap Place');
+      return;
+    }
+
+    await placeFinal(mode, color, pos, null);
+  } catch(e) {
+    console.error('onSelect error', e);
+    toast('Error placing: ' + e.message);
+    setStatus('Error: ' + e.message);
+    pending = null;
+    document.getElementById('resizePanel').style.display = 'none';
+    document.getElementById('toolbar').style.display = 'block';
   }
-
-  // Ceiling / Live load place immediately (fixed size)
-  await placeFinal(mode, color, pos, null);
 }
 
 async function placeFinal(type, color, pos, dimension) {
-  const frame = renderer.xr.getFrame();
-  const referenceSpace = renderer.xr.getReferenceSpace();
-
-  let anchor = null;
   try {
-    if (frame.createAnchor) {
-      anchor = await frame.createAnchor(
-        new XRRigidTransform({ x:pos.x, y:pos.y, z:pos.z }),
-        referenceSpace
-      );
+    const frame = renderer.xr.getFrame();
+    const referenceSpace = renderer.xr.getReferenceSpace();
+
+    let anchor = null;
+    try {
+      if (frame && frame.createAnchor) {
+        anchor = await frame.createAnchor(
+          new XRRigidTransform({ x:pos.x, y:pos.y, z:pos.z }),
+          referenceSpace
+        );
+      }
+    } catch(e) {
+      console.warn('Anchor failed, using static placement', e);
     }
-  } catch(e) { console.warn('Anchor failed, using static placement', e); }
 
-  const obj = createMarker(type, color, dimension);
-  if (!anchor) obj.position.copy(pos);
-  scene.add(obj);
-  placedItems.push({ anchor, object: obj, type, billboard: type === 'slab' });
+    const obj = createMarker(type, color, dimension);
+    if (!anchor) obj.position.copy(pos);
+    scene.add(obj);
+    placedItems.push({ anchor, object: obj, type, billboard: type === 'slab' });
 
-  toast(LABELS[type]);
+    toast(LABELS[type]);
+    setStatus('Move phone to find a surface');
+  } catch(e) {
+    console.error('placeFinal error', e);
+    toast('Placement failed: ' + e.message);
+    setStatus('Placement failed: ' + e.message);
+  }
 }
 
 window.cancelResize = function() {
@@ -581,6 +597,12 @@ function render(timestamp, frame) {
 }
 
 window.setMode = function(m) {
+  // Cancel any stuck pending resize when switching modes
+  if (pending && pending.obj) { scene.remove(pending.obj); }
+  pending = null;
+  document.getElementById('resizePanel').style.display = 'none';
+  document.getElementById('toolbar').style.display = 'block';
+
   mode = m;
   const classes = { ceil:'a-ceil', slab:'a-slab', col:'a-col', live:'a-live', view:'a-view' };
   Object.keys(classes).forEach(id=>{
