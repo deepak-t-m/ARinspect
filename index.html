@@ -9,7 +9,6 @@
 html,body{width:100vw;height:100vh;overflow:hidden;
   background:#000;font-family:-apple-system,'Segoe UI',sans-serif;}
 
-/* ── START ── */
 #start{
   position:fixed;inset:0;z-index:999;
   background:linear-gradient(160deg,#06080F,#0D1525);
@@ -41,29 +40,17 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
   border-radius:10px;font-size:11px;color:#FF8888;
   line-height:1.6;max-width:300px;}
 
-/* ── CAMERA ── */
-#cam{
-  position:fixed;inset:0;
-  width:100%;height:100%;
-  object-fit:cover;
-  display:none;z-index:1;
-}
-
-/* ── CANVAS (on top of camera) ── */
-#cv{
-  position:fixed;inset:0;
-  width:100%;height:100%;
-  display:none;z-index:2;
-  touch-action:none;
-}
-
-/* ── TOP BAR ── */
-#topbar{
+#overlay{
   display:none;
+  position:fixed;inset:0;z-index:5;
+  pointer-events:none;
+}
+#topbar{
   position:fixed;top:0;left:0;right:0;z-index:10;
   background:linear-gradient(to bottom,rgba(0,0,0,.82),transparent);
   padding:12px 16px 24px;
-  flex-direction:row;align-items:center;justify-content:space-between;
+  display:flex;flex-direction:row;align-items:center;justify-content:space-between;
+  pointer-events:all;
 }
 #appname{font-size:14px;font-weight:900;color:#fff;letter-spacing:.04em;}
 #undobtn{
@@ -73,17 +60,37 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 }
 #undobtn:active{opacity:.7;}
 
-/* ── TOOLBAR ── */
-#toolbar{
+#statusbar{
+  position:fixed;top:58px;left:0;right:0;z-index:10;
+  text-align:center;
+  background:rgba(0,0,0,.65);
+  padding:5px 16px;
+  font-size:11px;font-weight:600;
+  color:rgba(255,255,255,.55);
+  letter-spacing:.02em;
+  pointer-events:none;
+}
+
+#reticleStatus{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:22px;height:22px;
+  border:2px solid rgba(255,255,255,.4);
+  border-radius:50%;
+  pointer-events:none;
+  z-index:9;
   display:none;
+}
+#reticleStatus.found{border-color:#44CC78;}
+
+#toolbar{
   position:fixed;bottom:0;left:0;right:0;z-index:10;
   background:rgba(6,8,15,.97);
   border-top:1px solid rgba(255,255,255,.07);
   border-radius:20px 20px 0 0;
   padding:12px 12px 30px;
+  pointer-events:all;
 }
-
-/* Mode buttons row */
 #moderow{display:flex;gap:6px;margin-bottom:10px;}
 .mbtn{
   flex:1;display:flex;flex-direction:column;
@@ -98,15 +105,12 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 }
 .mbtn:active{transform:scale(.92);}
 .mbtn .ic{font-size:17px;line-height:1;}
-
-/* Active states per mode */
 .mbtn.a-ceil {background:rgba(74,158,255,.18);border-color:#4A9EFF;color:#4A9EFF;}
 .mbtn.a-slab {background:rgba(255,204,0,.15);border-color:#FFCC00;color:#FFCC00;}
 .mbtn.a-col  {background:rgba(167,139,250,.18);border-color:#A78BFA;color:#A78BFA;}
 .mbtn.a-live {background:rgba(255,107,53,.18);border-color:#FF6B35;color:#FF6B35;}
 .mbtn.a-view {background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff;}
 
-/* Legend */
 #legend{
   display:grid;grid-template-columns:1fr 1fr;
   gap:5px 10px;margin-bottom:10px;
@@ -115,7 +119,6 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
   font-size:10px;color:rgba(255,255,255,.45);}
 .ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
 
-/* Clear */
 #clrbtn{
   width:100%;padding:9px;border-radius:10px;
   background:rgba(255,255,255,.04);
@@ -125,9 +128,8 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 }
 #clrbtn:active{opacity:.6;}
 
-/* Mode hint strip */
 #modehint{
-  position:fixed;top:58px;left:0;right:0;z-index:10;
+  position:fixed;bottom:185px;left:0;right:0;z-index:10;
   text-align:center;
   background:rgba(0,0,0,.65);
   padding:5px 16px;
@@ -135,11 +137,11 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
   color:rgba(255,255,255,.5);
   display:none;
   letter-spacing:.02em;
+  pointer-events:none;
 }
 
-/* Toast */
 #toast{
-  position:fixed;top:72px;left:50%;
+  position:fixed;top:90px;left:50%;
   transform:translateX(-50%);
   background:rgba(6,10,22,.95);color:#fff;
   padding:7px 16px;border-radius:20px;
@@ -154,11 +156,10 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 </head>
 <body>
 
-<!-- START -->
 <div id="start">
   <div class="logo">ARInspect</div>
   <h1>Live Structural<br/><span>Load Visualizer</span></h1>
-  <p class="desc">Point camera at your classroom. Tap to instantly place load arrows on any structural element.</p>
+  <p class="desc">Point camera at your classroom. Tap a detected surface to place load markers that stay locked in place.</p>
 
   <div class="feat-grid">
     <div class="feat">
@@ -183,455 +184,282 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
     </div>
   </div>
 
-  <button id="startbtn" onclick="startApp()">Open Camera</button>
+  <button id="startbtn" onclick="startApp()">Start AR</button>
   <div id="errmsg"></div>
 </div>
 
-<!-- CAMERA -->
-<video id="cam" autoplay playsinline muted></video>
+<div id="overlay">
+  <div id="topbar">
+    <span id="appname">ARInspect</span>
+    <button id="undobtn" onclick="undo()">↩ Undo</button>
+  </div>
+  <div id="statusbar">Initializing...</div>
+  <div id="modehint"></div>
 
-<!-- CANVAS -->
-<canvas id="cv"></canvas>
-
-<!-- TOP BAR -->
-<div id="topbar">
-  <span id="appname">ARInspect</span>
-  <button id="undobtn" onclick="undo()">↩ Undo</button>
+  <div id="toolbar">
+    <div id="moderow">
+      <div class="mbtn" id="mb-ceil" onclick="setMode('ceil')"><span class="ic">↓</span>Ceiling</div>
+      <div class="mbtn" id="mb-slab" onclick="setMode('slab')"><span class="ic">▬</span>Slab</div>
+      <div class="mbtn" id="mb-col" onclick="setMode('col')"><span class="ic">▪</span>Column</div>
+      <div class="mbtn" id="mb-live" onclick="setMode('live')"><span class="ic">🧍</span>Live</div>
+      <div class="mbtn a-view" id="mb-view" onclick="setMode('view')"><span class="ic">👁</span>View</div>
+    </div>
+    <div id="legend">
+      <div class="li"><div class="ld" style="background:#4A9EFF;"></div>Dead load (ceiling)</div>
+      <div class="li"><div class="ld" style="background:#FF6B35;"></div>Live load (person)</div>
+      <div class="li"><div class="ld" style="background:#A78BFA;"></div>Column axial load</div>
+      <div class="li"><div class="ld" style="background:#FFCC00;"></div>Slab dead load</div>
+    </div>
+    <button id="clrbtn" onclick="clearAll()">Clear all</button>
+  </div>
 </div>
 
-<!-- MODE HINT -->
-<div id="modehint"></div>
-
-<!-- TOOLBAR -->
-<div id="toolbar">
-  <div id="moderow">
-    <div class="mbtn" id="mb-ceil" onclick="setMode('ceil')">
-      <span class="ic">↓</span>Ceiling
-    </div>
-    <div class="mbtn" id="mb-slab" onclick="setMode('slab')">
-      <span class="ic">▬</span>Slab
-    </div>
-    <div class="mbtn" id="mb-col" onclick="setMode('col')">
-      <span class="ic">▪</span>Column
-    </div>
-    <div class="mbtn" id="mb-live" onclick="setMode('live')">
-      <span class="ic">🧍</span>Live
-    </div>
-    <div class="mbtn a-view" id="mb-view" onclick="setMode('view')">
-      <span class="ic">👁</span>View
-    </div>
-  </div>
-
-  <div id="legend">
-    <div class="li"><div class="ld" style="background:#4A9EFF;"></div>Dead load (ceiling)</div>
-    <div class="li"><div class="ld" style="background:#FF6B35;"></div>Live load (person)</div>
-    <div class="li"><div class="ld" style="background:#A78BFA;"></div>Column axial load</div>
-    <div class="li"><div class="ld" style="background:#FFCC00;"></div>Slab dead load</div>
-    <div class="li"><div class="ld" style="background:#44CC78;border-radius:50%;"></div>Upward reaction</div>
-    <div class="li"><div class="ld" style="background:rgba(255,255,255,.15);border:1px dashed rgba(255,255,255,.3);"></div>Frame guide</div>
-  </div>
-
-  <button id="clrbtn" onclick="clearAll()">Clear all</button>
-</div>
-
+<div id="reticleStatus"></div>
 <div id="toast"></div>
 
-<script>
-// ═══════════════════
-// STATE
-// ═══════════════════
-let cam, cv, ctx;
-let mode     = 'view';
-let elements = [];
-let phase    = 0;
-let running  = false;
-let toolbarH = 0;
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
-const CDEAD  = '#4A9EFF';
-const CLIVE  = '#FF6B35';
-const CCOL   = '#A78BFA';
-const CSLAB  = '#FFCC00';
-const CGRN   = '#44CC78';
+let camera, scene, renderer, session;
+let reticle, hitTestSource = null, hitTestSourceRequested = false;
+let placedItems = [];
+let mode = 'view';
 
-// ═══════════════════
-// START
-// ═══════════════════
-async function startApp() {
+const COLORS = { ceil:0x4A9EFF, slab:0xFFCC00, col:0xA78BFA, live:0xFF6B35 };
+const LABELS = {
+  ceil:'Ceiling dead load placed',
+  slab:'Slab placed — dead load arrows active',
+  col:'Column placed — load path to foundation',
+  live:'Live load placed'
+};
+const HINTS = {
+  ceil:'↑ Tap on the ceiling to place dead load arrows',
+  slab:'↑ Tap on any slab or beam',
+  col:'↑ Tap on any column in the view',
+  live:'↑ Tap where a person is standing',
+  view:''
+};
+
+window.startApp = async function() {
   const btn = document.getElementById('startbtn');
-  btn.textContent = 'Opening camera…';
+  btn.textContent = 'Starting AR…';
   btn.disabled = true;
 
+  if (!navigator.xr) {
+    showErr('WebXR not available. Use Chrome on Android.');
+    return;
+  }
+
+  const supported = await navigator.xr.isSessionSupported('immersive-ar').catch(()=>false);
+  if (!supported) {
+    showErr('AR not supported on this device/browser. Update Chrome and "Google Play Services for AR".');
+    return;
+  }
+
+  initThree();
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ ideal:'environment' }, width:{ideal:1280}, height:{ideal:720} },
-      audio:false
-    }).catch(()=> navigator.mediaDevices.getUserMedia({ video:true, audio:false }));
-
-    cam = document.getElementById('cam');
-    cam.srcObject = stream;
-    cam.style.display = 'block';
-
-    await new Promise(res => {
-      cam.onloadedmetadata = () => { cam.play(); res(); };
-      setTimeout(res, 3000);
+    session = await navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures: ['hit-test'],
+      optionalFeatures: ['anchors', 'dom-overlay'],
+      domOverlay: { root: document.getElementById('overlay') }
     });
-
-    // Setup canvas
-    cv          = document.getElementById('cv');
-    cv.width    = window.innerWidth;
-    cv.height   = window.innerHeight;
-    ctx         = cv.getContext('2d');
-    cv.style.display = 'block';
-
-    // Show UI
-    document.getElementById('start').style.display   = 'none';
-    document.getElementById('topbar').style.display  = 'flex';
-    document.getElementById('toolbar').style.display = 'block';
-    toolbarH = document.getElementById('toolbar').offsetHeight;
-
-    running = true;
-    loop();
-    setTimeout(()=> toast('Select a mode below and tap on the structure'), 400);
-
   } catch(e) {
-    const msg = e.name === 'NotAllowedError'
-      ? 'Camera blocked — tap the lock icon in Chrome address bar → Allow Camera → refresh'
-      : 'Camera error: ' + e.message;
-    const err = document.getElementById('errmsg');
-    err.textContent = msg; err.style.display = 'block';
-    btn.textContent = 'Try Again'; btn.disabled = false;
+    showErr('Failed to start AR session: ' + e.message);
+    return;
   }
-}
 
-// ═══════════════════
-// RENDER LOOP
-// ═══════════════════
-function loop() {
-  if (!running) return;
-  phase += 0.055;
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  drawGuides();
-  drawAll();
-  requestAnimationFrame(loop);
-}
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('overlay').style.display = 'block';
+  document.getElementById('reticleStatus').style.display = 'block';
 
-// ═══════════════════
-// GUIDES
-// ═══════════════════
-function drawGuides() {
-  const W = cv.width, H = cv.height;
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([4,9]);
-  [.18,.5,.82].forEach(f=>{
-    ctx.beginPath(); ctx.moveTo(W*f,0); ctx.lineTo(W*f,H-toolbarH); ctx.stroke();
+  renderer.xr.setReferenceSpaceType('local');
+  await renderer.xr.setSession(session);
+
+  setStatus('Scanning for surfaces… move phone slowly');
+  setMode('view');
+  renderer.setAnimationLoop(render);
+
+  session.addEventListener('end', () => {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('reticleStatus').style.display = 'none';
+    document.getElementById('start').style.display = 'flex';
+    btn.textContent = 'Start AR';
+    btn.disabled = false;
   });
-  [.25,.55,.82].forEach(f=>{
-    ctx.beginPath(); ctx.moveTo(0,H*f); ctx.lineTo(W,H*f); ctx.stroke();
-  });
-  ctx.setLineDash([]);
-  // Floor line
-  ctx.strokeStyle = 'rgba(74,158,255,0.22)';
-  ctx.lineWidth   = 1.5;
-  ctx.beginPath(); ctx.moveTo(0,H-toolbarH-4); ctx.lineTo(W,H-toolbarH-4); ctx.stroke();
-  ctx.fillStyle   = 'rgba(74,158,255,0.4)';
-  ctx.font        = '600 10px -apple-system,sans-serif';
-  ctx.textAlign   = 'left';
-  ctx.fillText('FLOOR LEVEL', 12, H-toolbarH-8);
-  ctx.restore();
+};
+
+function showErr(msg) {
+  const err = document.getElementById('errmsg');
+  err.textContent = msg;
+  err.style.display = 'block';
+  const btn = document.getElementById('startbtn');
+  btn.textContent = 'Try Again';
+  btn.disabled = false;
 }
 
-// ═══════════════════
-// DRAW ALL ELEMENTS
-// ═══════════════════
-function drawAll() {
-  elements.forEach((el, idx) => {
-    switch(el.type) {
-      case 'ceil': drawCeil(el, idx); break;
-      case 'slab': drawSlab(el, idx); break;
-      case 'col':  drawCol(el, idx);  break;
-      case 'live': drawLive(el, idx); break;
+function initThree() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
+
+  renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.xr.enabled = true;
+  renderer.domElement.style.position = 'fixed';
+  renderer.domElement.style.inset = '0';
+  renderer.domElement.style.zIndex = '1';
+  document.body.appendChild(renderer.domElement);
+
+  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+  scene.add(light);
+
+  reticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.06, 0.08, 32).rotateX(-Math.PI/2),
+    new THREE.MeshBasicMaterial({ color: 0x44CC78 })
+  );
+  reticle.matrixAutoUpdate = false;
+  reticle.visible = false;
+  scene.add(reticle);
+
+  const controller = renderer.xr.getController(0);
+  controller.addEventListener('select', onSelect);
+  scene.add(controller);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+
+async function onSelect() {
+  if (mode === 'view') return;
+  if (!reticle.visible) { toast('No surface detected here yet'); return; }
+
+  const frame = renderer.xr.getFrame();
+  const referenceSpace = renderer.xr.getReferenceSpace();
+  const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
+  const color = COLORS[mode];
+
+  let anchor = null;
+  try {
+    if (frame.createAnchor) {
+      anchor = await frame.createAnchor(
+        new XRRigidTransform({ x:pos.x, y:pos.y, z:pos.z }),
+        referenceSpace
+      );
     }
-  });
+  } catch(e) { console.warn('Anchor failed, using static placement', e); }
+
+  const obj = createMarker(mode, color);
+  if (!anchor) obj.position.copy(pos);
+  scene.add(obj);
+  placedItems.push({ anchor, object: obj, type: mode });
+
+  toast(LABELS[mode]);
 }
 
-// ── CEILING dead load band ───────────────────────────
-function drawCeil(el, idx) {
-  const W = cv.width;
-  const y = el.y;
+function createMarker(type, color) {
+  const group = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color });
 
-  // Glow band
-  ctx.save();
-  const g = ctx.createLinearGradient(0, y-50, 0, y+30);
-  g.addColorStop(0, 'rgba(74,158,255,0.20)');
-  g.addColorStop(1, 'rgba(74,158,255,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, y-50, W, 80);
-  ctx.restore();
-
-  // Ceiling line
-  ctx.save();
-  ctx.strokeStyle = 'rgba(74,158,255,0.5)';
-  ctx.lineWidth   = 2;
-  ctx.setLineDash([8,6]);
-  ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-
-  // Label
-  ctx.save();
-  ctx.font      = '600 10px -apple-system,sans-serif';
-  ctx.fillStyle = 'rgba(74,158,255,0.72)';
-  ctx.textAlign = 'left';
-  ctx.fillText('CEILING SLAB — Dead Load ↓', 14, y-6);
-  ctx.restore();
-
-  // Dead load arrows downward across full width
-  const gap   = 62;
-  const count = Math.floor(W / gap);
-  for (let i = 0; i < count; i++) {
-    const x   = 31 + i*gap;
-    const bob = Math.sin(phase + i*0.6 + idx)*7;
-    arrow(x, y+4+bob, x, y+52+bob, CDEAD, 2, 8);
+  if (type === 'col') {
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.04), mat);
+    shaft.position.y = 0.15;
+    group.add(shaft);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.1), mat);
+    group.add(base);
+  } else if (type === 'slab') {
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.02, 0.15), mat);
+    group.add(slab);
+  } else {
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,0.15,12), mat);
+    shaft.position.y = 0.075;
+    group.add(shaft);
+    const head = new THREE.Mesh(new THREE.ConeGeometry(0.025,0.05,12), mat);
+    head.position.y = 0.175;
+    group.add(head);
   }
-
-  // Vertical column-line emphasis where guides are
-  ctx.save();
-  ctx.strokeStyle = 'rgba(74,158,255,0.10)';
-  ctx.lineWidth   = 10;
-  [.18,.5,.82].forEach(f=>{
-    ctx.beginPath(); ctx.moveTo(W*f,y-40); ctx.lineTo(W*f,y+30); ctx.stroke();
-  });
-  ctx.restore();
+  return group;
 }
 
-// ── SLAB element ─────────────────────────────────────
-function drawSlab(el, idx) {
-  const bob = Math.sin(phase + idx*.75)*5;
+function render(timestamp, frame) {
+  if (frame) {
+    const referenceSpace = renderer.xr.getReferenceSpace();
+    const sess = renderer.xr.getSession();
 
-  // Slab box
-  ctx.save();
-  ctx.strokeStyle = CSLAB; ctx.lineWidth = 2; ctx.globalAlpha = .90;
-  ctx.strokeRect(el.x-70, el.y-9, 140, 18);
-  ctx.fillStyle = 'rgba(255,204,0,0.10)';
-  ctx.fillRect(el.x-70, el.y-9, 140, 18);
-  ctx.restore();
+    if (!hitTestSourceRequested) {
+      sess.requestReferenceSpace('viewer').then(refSpace=>{
+        sess.requestHitTestSource({ space: refSpace }).then(source=>{
+          hitTestSource = source;
+        });
+      }).catch(e=> setStatus('Hit-test error: '+e.message));
+      sess.addEventListener('end', ()=>{ hitTestSourceRequested=false; hitTestSource=null; });
+      hitTestSourceRequested = true;
+    }
 
-  // Slab label
-  ctx.save();
-  ctx.font = 'bold 10px -apple-system,sans-serif';
-  ctx.fillStyle = CSLAB; ctx.textAlign = 'center'; ctx.globalAlpha = .82;
-  ctx.fillText('SLAB', el.x, el.y-13);
-  ctx.restore();
+    const reticleStatusEl = document.getElementById('reticleStatus');
+    if (hitTestSource) {
+      const results = frame.getHitTestResults(hitTestSource);
+      if (results.length > 0) {
+        const pose = results[0].getPose(referenceSpace);
+        reticle.visible = true;
+        reticle.matrix.fromArray(pose.transform.matrix);
+        reticleStatusEl.classList.add('found');
+        if (mode !== 'view') setStatus('Surface found — tap to place');
+      } else {
+        reticle.visible = false;
+        reticleStatusEl.classList.remove('found');
+        if (mode !== 'view') setStatus('Move phone slowly to find a surface');
+      }
+    }
 
-  // Dead load arrows downward
-  [-44, -14, 14, 44].forEach((off, ai)=>{
-    arrow(el.x+off, el.y+9+bob, el.x+off, el.y+52+bob, CSLAB, 2, 8);
-  });
-
-  // Upward reaction arrows (support reactions)
-  [-44, 44].forEach(off=>{
-    arrow(el.x+off, el.y+60, el.x+off, el.y+20, 'rgba(68,204,120,0.5)', 1.5, 7);
-  });
+    placedItems.forEach(item=>{
+      if (item.anchor && item.anchor.anchorSpace) {
+        const pose = frame.getPose(item.anchor.anchorSpace, referenceSpace);
+        if (pose) {
+          item.object.matrix.fromArray(pose.transform.matrix);
+          item.object.matrix.decompose(item.object.position, item.object.quaternion, item.object.scale);
+        }
+      }
+    });
+  }
+  renderer.render(scene, camera);
 }
 
-// ── COLUMN element ───────────────────────────────────
-function drawCol(el, idx) {
-  const H   = cv.height;
-  const bob = Math.sin(phase + idx*.8)*5;
-  const floorY = H - toolbarH - 4;
-
-  // Column rectangle — from element down to floor
-  ctx.save();
-  ctx.strokeStyle = CCOL; ctx.lineWidth = 2.5; ctx.globalAlpha = .88;
-  ctx.strokeRect(el.x-14, el.y, 28, Math.max(10, floorY-el.y));
-  ctx.fillStyle = 'rgba(167,139,250,0.08)';
-  ctx.fillRect(el.x-14, el.y, 28, Math.max(10, floorY-el.y));
-  ctx.restore();
-
-  // Cross-section highlight at tap point
-  ctx.save();
-  ctx.strokeStyle = CCOL; ctx.lineWidth = 3; ctx.globalAlpha = .95;
-  ctx.strokeRect(el.x-16, el.y-16, 32, 32);
-  ctx.fillStyle = 'rgba(167,139,250,0.18)';
-  ctx.fillRect(el.x-16, el.y-16, 32, 32);
-  ctx.restore();
-
-  // Axial load arrow downward above column head
-  arrow(el.x, el.y-70+bob, el.x, el.y-20+bob, CCOL, 3, 10);
-
-  // Column label
-  ctx.save();
-  ctx.font = 'bold 10px -apple-system,sans-serif';
-  ctx.fillStyle = CCOL; ctx.textAlign = 'center'; ctx.globalAlpha = .85;
-  ctx.fillText('COLUMN', el.x, el.y-76+bob);
-  ctx.restore();
-
-  // Foundation block at floor
-  ctx.save();
-  ctx.strokeStyle = CCOL; ctx.lineWidth = 2; ctx.globalAlpha = .60;
-  ctx.strokeRect(el.x-20, floorY, 40, 16);
-  ctx.fillStyle = 'rgba(167,139,250,0.12)';
-  ctx.fillRect(el.x-20, floorY, 40, 16);
-  ctx.font = '600 9px -apple-system,sans-serif';
-  ctx.fillStyle = CCOL; ctx.textAlign = 'center'; ctx.globalAlpha = .65;
-  ctx.fillText('FDN', el.x, floorY+11);
-  ctx.restore();
-
-  // Upward reaction at foundation
-  arrow(el.x, floorY+16, el.x, floorY-24, 'rgba(68,204,120,0.5)', 2, 8);
-}
-
-// ── LIVE LOAD (person silhouette + arrows) ───────────
-function drawLive(el, idx) {
-  const bob = Math.sin(phase + idx*1.1)*7;
-  const col = CLIVE;
-
-  // Person silhouette — simple circle head + body lines
-  ctx.save();
-  ctx.strokeStyle = col; ctx.lineWidth = 3;
-  ctx.lineCap = 'round'; ctx.globalAlpha = .88;
-
-  // Head
-  ctx.beginPath();
-  ctx.arc(el.x, el.y-68, 14, 0, Math.PI*2);
-  ctx.fillStyle = 'rgba(255,107,53,0.18)';
-  ctx.fill();
-  ctx.stroke();
-
-  // Body
-  ctx.beginPath(); ctx.moveTo(el.x, el.y-54); ctx.lineTo(el.x, el.y-18); ctx.stroke();
-  // Arms
-  ctx.beginPath(); ctx.moveTo(el.x-18, el.y-40); ctx.lineTo(el.x+18, el.y-40); ctx.stroke();
-  // Left leg
-  ctx.beginPath(); ctx.moveTo(el.x, el.y-18); ctx.lineTo(el.x-14, el.y+6); ctx.stroke();
-  // Right leg
-  ctx.beginPath(); ctx.moveTo(el.x, el.y-18); ctx.lineTo(el.x+14, el.y+6); ctx.stroke();
-  ctx.restore();
-
-  // Bounding dashed box
-  ctx.save();
-  ctx.strokeStyle = col; ctx.lineWidth = 1.5;
-  ctx.setLineDash([5,5]); ctx.globalAlpha = .38;
-  ctx.strokeRect(el.x-30, el.y-88, 60, 100);
-  ctx.setLineDash([]); ctx.globalAlpha = 1; ctx.restore();
-
-  // Live load label
-  ctx.save();
-  ctx.font = 'bold 10px -apple-system,sans-serif';
-  ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.globalAlpha = .88;
-  ctx.fillText('LIVE LOAD ↓', el.x, el.y-96+bob);
-  ctx.restore();
-
-  // Live load arrows above head
-  [-22, 0, 22].forEach(off=>{
-    arrow(el.x+off, el.y-114+bob, el.x+off, el.y-96+bob, col, 2, 8);
-  });
-
-  // Weight arrows down from feet
-  arrow(el.x-10, el.y+8, el.x-10, el.y+44, 'rgba(255,107,53,0.55)', 1.5, 7);
-  arrow(el.x+10, el.y+8, el.x+10, el.y+44, 'rgba(255,107,53,0.55)', 1.5, 7);
-}
-
-// ═══════════════════
-// ARROW UTILITY
-// ═══════════════════
-function arrow(x1,y1,x2,y2,col,w,hs){
-  const a = Math.atan2(y2-y1, x2-x1);
-  ctx.save();
-  ctx.strokeStyle = col; ctx.fillStyle = col;
-  ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.globalAlpha = .92;
-  ctx.beginPath();
-  ctx.moveTo(x1,y1);
-  ctx.lineTo(x2 - Math.cos(a)*hs, y2 - Math.sin(a)*hs);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x2,y2);
-  ctx.lineTo(x2-hs*Math.cos(a-Math.PI/6), y2-hs*Math.sin(a-Math.PI/6));
-  ctx.lineTo(x2-hs*Math.cos(a+Math.PI/6), y2-hs*Math.sin(a+Math.PI/6));
-  ctx.closePath(); ctx.fill(); ctx.restore();
-}
-
-// ═══════════════════
-// MODE SWITCHING
-// ═══════════════════
-function setMode(m) {
+window.setMode = function(m) {
   mode = m;
-  const classes = {
-    ceil:'a-ceil', slab:'a-slab',
-    col:'a-col', live:'a-live', view:'a-view'
-  };
-  const hints = {
-    ceil: '↑ Tap on the ceiling to place dead load arrows',
-    slab: '↑ Tap on any slab or beam',
-    col:  '↑ Tap on any column in the view',
-    live: '↑ Tap where a person is standing',
-    view: ''
-  };
+  const classes = { ceil:'a-ceil', slab:'a-slab', col:'a-col', live:'a-live', view:'a-view' };
   Object.keys(classes).forEach(id=>{
     const b = document.getElementById('mb-'+id);
     b.className = 'mbtn';
     if (id === m) b.classList.add(classes[id]);
   });
-
   const hint = document.getElementById('modehint');
-  if (m === 'view') {
-    hint.style.display = 'none';
-    cv.style.pointerEvents = 'none';
-  } else {
-    hint.textContent   = hints[m];
-    hint.style.display = 'block';
-    cv.style.pointerEvents = 'all';
-  }
-  if (m !== 'view') toast(hints[m]);
-}
+  if (m === 'view') { hint.style.display = 'none'; }
+  else { hint.textContent = HINTS[m]; hint.style.display = 'block'; toast(HINTS[m]); }
+  setStatus(m === 'view' ? 'View mode — select a tool to place markers' : 'Move phone to find a surface');
+};
 
-// ═══════════════════
-// TAP HANDLER
-// ═══════════════════
-function handleTap(x, y) {
-  if (mode === 'view') return;
-  // Block taps inside toolbar
-  if (y > window.innerHeight - toolbarH - 10) return;
-  elements.push({ type:mode, x, y });
-  const msgs = {
-    ceil:'Ceiling dead load placed',
-    slab:'Slab placed — dead load arrows active',
-    col: 'Column placed — load path to foundation',
-    live:'Live load placed'
-  };
-  toast(msgs[mode]);
-}
+window.undo = function() {
+  if (placedItems.length) {
+    const last = placedItems.pop();
+    scene.remove(last.object);
+    toast('Removed last element');
+  } else toast('Nothing to undo');
+};
 
-// Attach to canvas
-window.addEventListener('load', ()=>{
-  const canvas = document.getElementById('cv');
-
-  canvas.addEventListener('touchstart', e=>{
-    e.preventDefault();
-    const t = e.touches[0];
-    handleTap(t.clientX, t.clientY);
-  },{ passive:false });
-
-  canvas.addEventListener('click', e=>{
-    handleTap(e.clientX, e.clientY);
-  });
-});
-
-function undo() {
-  if (elements.length) { elements.pop(); toast('Removed last element'); }
-  else toast('Nothing to undo');
-}
-
-function clearAll() {
-  elements = [];
+window.clearAll = function() {
+  placedItems.forEach(item => scene.remove(item.object));
+  placedItems = [];
   toast('Cleared all elements');
+};
+
+function setStatus(msg) {
+  const el = document.getElementById('statusbar');
+  if (el) el.textContent = msg;
 }
 
-// ═══════════════════
-// UTILS
-// ═══════════════════
 let toastT = null;
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -641,13 +469,6 @@ function toast(msg) {
   clearTimeout(toastT);
   toastT = setTimeout(()=> el.classList.remove('show'), 2400);
 }
-
-window.addEventListener('resize', ()=>{
-  if (!cv) return;
-  cv.width  = window.innerWidth;
-  cv.height = window.innerHeight;
-  toolbarH  = document.getElementById('toolbar').offsetHeight;
-});
 </script>
 </body>
 </html>
