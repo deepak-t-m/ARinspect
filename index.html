@@ -151,7 +151,39 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
   pointer-events:none;z-index:999;
   white-space:nowrap;
 }
-#toast.show{opacity:1;}
+#resizePanel{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:15;
+  background:rgba(6,8,15,.97);
+  border-top:1px solid rgba(255,255,255,.07);
+  border-radius:20px 20px 0 0;
+  padding:16px 16px 30px;
+  pointer-events:all;
+}
+#resizePanel .rlabel{
+  font-size:12px;font-weight:700;color:#fff;margin-bottom:8px;
+  display:flex;justify-content:space-between;
+}
+#resizePanel .rval{color:#4A9EFF;}
+#resizeSlider{
+  width:100%;height:34px;margin-bottom:14px;
+  -webkit-appearance:none;background:transparent;
+}
+#resizeSlider::-webkit-slider-runnable-track{
+  height:6px;border-radius:4px;background:rgba(255,255,255,.15);
+}
+#resizeSlider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:26px;height:26px;border-radius:50%;
+  background:#4A9EFF;border:3px solid #fff;margin-top:-10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+#resizeBtns{display:flex;gap:8px;}
+#resizeBtns button{
+  flex:1;padding:12px;border-radius:10px;border:none;
+  font-size:13px;font-weight:800;cursor:pointer;
+}
+#resizeConfirm{background:linear-gradient(135deg,#4A9EFF,#A78BFA);color:#fff;}
+#resizeCancel{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
 </style>
 </head>
 <body>
@@ -217,6 +249,15 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 <div id="reticleStatus"></div>
 <div id="toast"></div>
 
+<div id="resizePanel">
+  <div class="rlabel"><span id="resizeTitle">Slab width</span><span class="rval" id="resizeVal">1.0 m</span></div>
+  <input type="range" id="resizeSlider" min="0.3" max="3" step="0.1" value="1.0"/>
+  <div id="resizeBtns">
+    <button id="resizeCancel" onclick="cancelResize()">Cancel</button>
+    <button id="resizeConfirm" onclick="confirmResize()">Place</button>
+  </div>
+</div>
+
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
@@ -224,6 +265,7 @@ let camera, scene, renderer, session;
 let reticle, hitTestSource = null, hitTestSourceRequested = false;
 let placedItems = [];
 let mode = 'view';
+let pending = null; // { type, color, pos, dimension }
 
 const COLORS = { ceil:0x4A9EFF, slab:0xFFCC00, col:0xA78BFA, live:0xFF6B35 };
 const LABELS = {
@@ -335,11 +377,37 @@ function initThree() {
 async function onSelect() {
   if (mode === 'view') return;
   if (!reticle.visible) { toast('No surface detected here yet'); return; }
+  if (pending) return; // already mid-resize
 
-  const frame = renderer.xr.getFrame();
-  const referenceSpace = renderer.xr.getReferenceSpace();
   const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
   const color = COLORS[mode];
+
+  if (mode === 'slab' || mode === 'col') {
+    // Open resize panel instead of placing immediately
+    pending = { type: mode, color, pos, dimension: 1.0, obj: null };
+    pending.obj = createMarker(mode, color, pending.dimension);
+    pending.obj.position.copy(pos);
+    scene.add(pending.obj);
+
+    const panel = document.getElementById('resizePanel');
+    const title = document.getElementById('resizeTitle');
+    const slider = document.getElementById('resizeSlider');
+    title.textContent = mode === 'slab' ? 'Slab width' : 'Column height';
+    slider.value = pending.dimension;
+    updateResizeLabel(pending.dimension, 'm');
+    panel.style.display = 'block';
+    document.getElementById('toolbar').style.display = 'none';
+    setStatus('Drag slider to size — then tap Place');
+    return;
+  }
+
+  // Ceiling / Live load place immediately (fixed size)
+  await placeFinal(mode, color, pos, null);
+}
+
+async function placeFinal(type, color, pos, dimension) {
+  const frame = renderer.xr.getFrame();
+  const referenceSpace = renderer.xr.getReferenceSpace();
 
   let anchor = null;
   try {
@@ -351,32 +419,65 @@ async function onSelect() {
     }
   } catch(e) { console.warn('Anchor failed, using static placement', e); }
 
-  const obj = createMarker(mode, color);
+  const obj = createMarker(type, color, dimension);
   if (!anchor) obj.position.copy(pos);
   scene.add(obj);
-  placedItems.push({ anchor, object: obj, type: mode });
+  placedItems.push({ anchor, object: obj, type, billboard: type === 'slab' });
 
-  toast(LABELS[mode]);
+  toast(LABELS[type]);
 }
 
-function createMarker(type, color) {
+window.cancelResize = function() {
+  if (pending && pending.obj) scene.remove(pending.obj);
+  pending = null;
+  document.getElementById('resizePanel').style.display = 'none';
+  document.getElementById('toolbar').style.display = 'block';
+  setStatus('Move phone to find a surface');
+};
+
+window.confirmResize = async function() {
+  if (!pending) return;
+  scene.remove(pending.obj);
+  document.getElementById('resizePanel').style.display = 'none';
+  document.getElementById('toolbar').style.display = 'block';
+  await placeFinal(pending.type, pending.color, pending.pos, pending.dimension);
+  pending = null;
+};
+
+function updateResizeLabel(val, unit) {
+  document.getElementById('resizeVal').textContent = parseFloat(val).toFixed(1) + ' ' + unit;
+}
+
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'resizeSlider' && pending) {
+    pending.dimension = parseFloat(e.target.value);
+    updateResizeLabel(pending.dimension, 'm');
+    scene.remove(pending.obj);
+    pending.obj = createMarker(pending.type, pending.color, pending.dimension);
+    pending.obj.position.copy(pending.pos);
+    scene.add(pending.obj);
+  }
+});
+
+function createMarker(type, color, dimension) {
   const group = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({ color });
 
   function makeArrow(x, y, z) {
     const arrowGroup = new THREE.Group();
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 10), mat);
-    shaft.position.y = 0.06;
+    shaft.position.y = 0.08;
     arrowGroup.add(shaft);
     const head = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.04, 10), mat);
-    head.position.y = 0.14;
+    head.rotation.x = Math.PI; // flip cone to point downward
+    head.position.y = 0.02;
     arrowGroup.add(head);
     arrowGroup.position.set(x, y, z);
     return arrowGroup;
   }
 
   if (type === 'ceil') {
-    // Plane/grid of arrows simulating distributed ceiling load
+    // Plane/grid of arrows simulating distributed ceiling load (fixed size)
     const spacing = 0.12;
     const gridSize = 3;
     for (let i = 0; i < gridSize; i++) {
@@ -387,19 +488,23 @@ function createMarker(type, color) {
       }
     }
   } else if (type === 'slab') {
-    // Row of adjacent arrows side by side
-    const count = 5;
-    const spacing = 0.07;
+    // Row of adjacent arrows spanning the dragged width, spaced ~0.12m apart
+    const width = dimension || 1.0;
+    const spacing = 0.12;
+    const count = Math.max(2, Math.round(width / spacing) + 1);
+    const actualSpacing = width / (count - 1);
     for (let i = 0; i < count; i++) {
-      const x = (i - (count-1)/2) * spacing;
+      const x = (i - (count-1)/2) * actualSpacing;
       group.add(makeArrow(x, 0, 0));
     }
   } else if (type === 'col') {
-    // Arrows stacked one after another vertically (load path down to foundation)
-    const count = 4;
-    const vSpacing = 0.16;
+    // Arrows stacked down the dragged height, ~0.15m apart
+    const height = dimension || 1.0;
+    const vSpacing = 0.15;
+    const count = Math.max(2, Math.round(height / vSpacing) + 1);
+    const actualSpacing = height / (count - 1);
     for (let i = 0; i < count; i++) {
-      group.add(makeArrow(0, -i * vSpacing, 0));
+      group.add(makeArrow(0, -i * actualSpacing, 0));
     }
   } else {
     // Live load - single arrow
@@ -444,11 +549,33 @@ function render(timestamp, frame) {
       if (item.anchor && item.anchor.anchorSpace) {
         const pose = frame.getPose(item.anchor.anchorSpace, referenceSpace);
         if (pose) {
-          item.object.matrix.fromArray(pose.transform.matrix);
-          item.object.matrix.decompose(item.object.position, item.object.quaternion, item.object.scale);
+          // Only take POSITION from the anchor, ignore its rotation
+          const m = new THREE.Matrix4().fromArray(pose.transform.matrix);
+          const p = new THREE.Vector3();
+          p.setFromMatrixPosition(m);
+          item.object.position.copy(p);
         }
       }
+      if (item.billboard) {
+        // Face the row of arrows toward the camera, rotating only around Y (stay upright)
+        const camPos = new THREE.Vector3();
+        camera.getWorldPosition(camPos);
+        const dx = camPos.x - item.object.position.x;
+        const dz = camPos.z - item.object.position.z;
+        item.object.rotation.y = Math.atan2(dx, dz);
+      } else if (!item.object.userData.customRotation) {
+        item.object.quaternion.identity();
+      }
     });
+
+    // Keep pending (mid-resize) slab preview billboarded too
+    if (pending && pending.type === 'slab' && pending.obj) {
+      const camPos = new THREE.Vector3();
+      camera.getWorldPosition(camPos);
+      const dx = camPos.x - pending.obj.position.x;
+      const dz = camPos.z - pending.obj.position.z;
+      pending.obj.rotation.y = Math.atan2(dx, dz);
+    }
   }
   renderer.render(scene, camera);
 }
