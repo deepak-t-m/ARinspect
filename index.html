@@ -7,643 +7,555 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100vw;height:100vh;overflow:hidden;
-  background:#000;font-family:-apple-system,'Segoe UI',sans-serif;}
+  background:#000;font-family:-apple-system,'Segoe UI',sans-serif;
+  touch-action:none;}
 
-#start{
-  position:fixed;inset:0;z-index:999;
+/* Camera */
+#cam{position:fixed;inset:0;width:100%;height:100%;
+  object-fit:cover;display:none;z-index:1;}
+
+/* 3D Canvas */
+#cv3d{position:fixed;inset:0;width:100%;height:100%;
+  display:none;z-index:2;pointer-events:none;}
+
+/* Tap canvas (receives touch) */
+#tap{position:fixed;inset:0;width:100%;height:100%;
+  z-index:3;display:none;}
+
+/* ── START SCREEN ── */
+#start{position:fixed;inset:0;z-index:999;
   background:linear-gradient(160deg,#06080F,#0D1525);
   display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:32px 24px;text-align:center;color:#fff;
-}
+  justify-content:center;padding:32px 24px;text-align:center;color:#fff;}
 .logo{font-size:11px;font-weight:800;letter-spacing:.2em;
   color:#4A9EFF;margin-bottom:18px;text-transform:uppercase;}
 h1{font-size:30px;font-weight:900;line-height:1.1;margin-bottom:10px;}
 h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .desc{font-size:13px;color:rgba(255,255,255,.42);
-  line-height:1.8;margin-bottom:26px;max-width:280px;}
-.feat-grid{display:grid;grid-template-columns:1fr 1fr;
-  gap:8px;width:100%;max-width:310px;margin-bottom:26px;}
-.feat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
-  border-radius:12px;padding:12px 10px;text-align:left;}
-.feat-icon{font-size:18px;margin-bottom:4px;}
-.feat-title{font-size:11px;font-weight:700;color:#fff;margin-bottom:2px;}
-.feat-desc{font-size:10px;color:rgba(255,255,255,.38);line-height:1.4;}
+  line-height:1.8;margin-bottom:22px;max-width:280px;}
+.feat{width:100%;max-width:310px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);border-radius:14px;
+  padding:14px 16px;margin-bottom:22px;text-align:left;}
+.feat-row{display:flex;align-items:flex-start;gap:10px;
+  margin-bottom:8px;font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;}
+.feat-row:last-child{margin-bottom:0;}
+.fdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
 #startbtn{width:100%;max-width:310px;padding:16px;
   background:linear-gradient(135deg,#4A9EFF,#A78BFA);
   color:#fff;font-size:15px;font-weight:800;border:none;
-  border-radius:14px;cursor:pointer;
-  box-shadow:0 8px 24px rgba(74,158,255,.3);}
-#startbtn:active{opacity:.82;transform:scale(.98);}
+  border-radius:14px;cursor:pointer;}
+#startbtn:active{opacity:.82;}
 #errmsg{display:none;margin-top:12px;padding:11px 14px;
   background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);
   border-radius:10px;font-size:11px;color:#FF8888;
   line-height:1.6;max-width:300px;}
 
-#overlay{
-  display:none;
-  position:fixed;inset:0;z-index:5;
-  pointer-events:none;
-}
-#topbar{
-  position:fixed;top:0;left:0;right:0;z-index:10;
-  background:linear-gradient(to bottom,rgba(0,0,0,.82),transparent);
-  padding:12px 16px 24px;
-  display:flex;flex-direction:row;align-items:center;justify-content:space-between;
-  pointer-events:all;
-}
+/* ── TOP BAR ── */
+#topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:10;
+  background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);
+  padding:12px 16px 22px;
+  flex-direction:row;align-items:center;justify-content:space-between;}
 #appname{font-size:14px;font-weight:900;color:#fff;letter-spacing:.04em;}
-#undobtn{
-  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+#undobtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
   border-radius:20px;padding:5px 14px;
-  font-size:12px;font-weight:700;color:#fff;cursor:pointer;
-}
+  font-size:12px;font-weight:700;color:#fff;cursor:pointer;}
 #undobtn:active{opacity:.7;}
 
-#statusbar{
-  position:fixed;top:58px;left:0;right:0;z-index:10;
-  text-align:center;
-  background:rgba(0,0,0,.65);
-  padding:5px 16px;
-  font-size:11px;font-weight:600;
-  color:rgba(255,255,255,.55);
-  letter-spacing:.02em;
-  pointer-events:none;
-}
-
-#reticleStatus{
-  position:fixed;top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  width:22px;height:22px;
-  border:2px solid rgba(255,255,255,.4);
-  border-radius:50%;
-  pointer-events:none;
-  z-index:9;
-  display:none;
-}
-#reticleStatus.found{border-color:#44CC78;}
-
-#toolbar{
-  position:fixed;bottom:0;left:0;right:0;z-index:10;
+/* ── TOOLBAR ── */
+#toolbar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:10;
   background:rgba(6,8,15,.97);
   border-top:1px solid rgba(255,255,255,.07);
-  border-radius:20px 20px 0 0;
-  padding:12px 12px 30px;
-  pointer-events:all;
-}
+  border-radius:20px 20px 0 0;padding:12px 12px 28px;}
+
 #moderow{display:flex;gap:6px;margin-bottom:10px;}
-.mbtn{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;gap:3px;padding:9px 2px;
-  border-radius:12px;cursor:pointer;
+.mbtn{flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:9px 2px;border-radius:12px;cursor:pointer;
   border:1.5px solid rgba(255,255,255,.07);
   background:rgba(255,255,255,.03);
-  color:rgba(255,255,255,.4);
-  font-size:10px;font-weight:700;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none;transition:all .12s;
-}
+  color:rgba(255,255,255,.4);font-size:10px;font-weight:700;
+  -webkit-tap-highlight-color:transparent;user-select:none;transition:all .12s;}
 .mbtn:active{transform:scale(.92);}
 .mbtn .ic{font-size:17px;line-height:1;}
-.mbtn.a-ceil {background:rgba(74,158,255,.18);border-color:#4A9EFF;color:#4A9EFF;}
-.mbtn.a-slab {background:rgba(255,204,0,.15);border-color:#FFCC00;color:#FFCC00;}
-.mbtn.a-col  {background:rgba(167,139,250,.18);border-color:#A78BFA;color:#A78BFA;}
-.mbtn.a-live {background:rgba(255,107,53,.18);border-color:#FF6B35;color:#FF6B35;}
-.mbtn.a-view {background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff;}
+.mbtn.a-ceil{background:rgba(74,158,255,.18);border-color:#4A9EFF;color:#4A9EFF;}
+.mbtn.a-slab{background:rgba(255,204,0,.15);border-color:#FFCC00;color:#FFCC00;}
+.mbtn.a-col{background:rgba(167,139,250,.18);border-color:#A78BFA;color:#A78BFA;}
+.mbtn.a-live{background:rgba(255,107,53,.18);border-color:#FF6B35;color:#FF6B35;}
+.mbtn.a-view{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff;}
 
-#legend{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:5px 10px;margin-bottom:10px;
-}
+#legend{display:grid;grid-template-columns:1fr 1fr;
+  gap:5px 10px;margin-bottom:10px;}
 .li{display:flex;align-items:center;gap:6px;
   font-size:10px;color:rgba(255,255,255,.45);}
 .ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
 
-#clrbtn{
-  width:100%;padding:9px;border-radius:10px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.07);
-  color:rgba(255,255,255,.35);
-  font-size:11px;font-weight:700;cursor:pointer;
-}
+#clrbtn{width:100%;padding:9px;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  color:rgba(255,255,255,.35);font-size:11px;font-weight:700;cursor:pointer;}
 #clrbtn:active{opacity:.6;}
 
-#modehint{
-  position:fixed;bottom:185px;left:0;right:0;z-index:10;
-  text-align:center;
-  background:rgba(0,0,0,.65);
-  padding:5px 16px;
-  font-size:11px;font-weight:600;
-  color:rgba(255,255,255,.5);
-  display:none;
-  letter-spacing:.02em;
-  pointer-events:none;
-}
+/* Mode hint */
+#modehint{display:none;position:fixed;top:60px;left:50%;
+  transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;
+  padding:7px 16px;border-radius:20px;font-size:11px;font-weight:600;
+  white-space:nowrap;z-index:11;border:1px solid rgba(255,255,255,.1);}
 
-#toast{
-  position:fixed;top:90px;left:50%;
-  transform:translateX(-50%);
-  background:rgba(6,10,22,.95);color:#fff;
-  padding:7px 16px;border-radius:20px;
-  font-size:12px;font-weight:600;
-  border:1px solid rgba(255,255,255,.1);
-  opacity:0;transition:opacity .22s;
-  pointer-events:none;z-index:999;
-  white-space:nowrap;
-}
-#resizePanel{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;z-index:15;
-  background:rgba(6,8,15,.97);
-  border-top:1px solid rgba(255,255,255,.07);
-  border-radius:20px 20px 0 0;
-  padding:16px 16px 30px;
-  pointer-events:all;
-}
-#resizePanel .rlabel{
-  font-size:12px;font-weight:700;color:#fff;margin-bottom:8px;
-  display:flex;justify-content:space-between;
-}
-#resizePanel .rval{color:#4A9EFF;}
-#resizeSlider{
-  width:100%;height:34px;margin-bottom:14px;
-  -webkit-appearance:none;background:transparent;
-}
-#resizeSlider::-webkit-slider-runnable-track{
-  height:6px;border-radius:4px;background:rgba(255,255,255,.15);
-}
-#resizeSlider::-webkit-slider-thumb{
-  -webkit-appearance:none;width:26px;height:26px;border-radius:50%;
-  background:#4A9EFF;border:3px solid #fff;margin-top:-10px;
-  box-shadow:0 2px 8px rgba(0,0,0,.4);
-}
-#resizeBtns{display:flex;gap:8px;}
-#resizeBtns button{
-  flex:1;padding:12px;border-radius:10px;border:none;
-  font-size:13px;font-weight:800;cursor:pointer;
-}
-#resizeConfirm{background:linear-gradient(135deg,#4A9EFF,#A78BFA);color:#fff;}
-#resizeCancel{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+/* Toast */
+#toast{position:fixed;top:72px;left:50%;transform:translateX(-50%);
+  background:rgba(6,10,22,.95);color:#fff;padding:7px 16px;
+  border-radius:20px;font-size:12px;font-weight:600;
+  border:1px solid rgba(255,255,255,.1);opacity:0;
+  transition:opacity .22s;pointer-events:none;z-index:999;white-space:nowrap;}
+#toast.show{opacity:1;}
+
+/* Gyro indicator */
+#gyro-badge{position:fixed;top:60px;right:14px;z-index:11;
+  background:rgba(68,204,120,.15);border:1px solid rgba(68,204,120,.3);
+  border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;
+  color:#44CC78;display:none;}
 </style>
 </head>
 <body>
 
+<!-- START -->
 <div id="start">
   <div class="logo">ARInspect</div>
   <h1>Live Structural<br/><span>Load Visualizer</span></h1>
-  <p class="desc">Point camera at your classroom. Tap a detected surface to place load markers that stay locked in place.</p>
-
-  <div class="feat-grid">
-    <div class="feat">
-      <div class="feat-icon">🏛️</div>
-      <div class="feat-title">Ceiling / Dead</div>
-      <div class="feat-desc">Tap ceiling → grid of dead load arrows</div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">▬</div>
-      <div class="feat-title">Slab</div>
-      <div class="feat-desc">Tap slab → adjacent row of arrows</div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">▪</div>
-      <div class="feat-title">Column</div>
-      <div class="feat-desc">Tap column → stacked arrows down to foundation</div>
-    </div>
-    <div class="feat">
-      <div class="feat-icon">🧍</div>
-      <div class="feat-title">Live Load</div>
-      <div class="feat-desc">Tap where person stands → single load arrow</div>
-    </div>
+  <p class="desc">Point camera at your classroom. Tap to place 3D load arrows that stay locked in real space as you move.</p>
+  <div class="feat">
+    <div class="feat-row"><div class="fdot" style="background:#4A9EFF"></div>Ceiling — full plane of arrows across slab, stay locked overhead</div>
+    <div class="feat-row"><div class="fdot" style="background:#FFCC00"></div>Slab — grid of adjacent arrows across beam width, parallel to slab face</div>
+    <div class="feat-row"><div class="fdot" style="background:#A78BFA"></div>Column — vertical stack of arrows showing axial load path down to foundation</div>
+    <div class="feat-row"><div class="fdot" style="background:#FF6B35"></div>Live — person silhouette with live load arrows, always faces you</div>
   </div>
-
-  <button id="startbtn" onclick="startApp()">Start AR</button>
+  <button id="startbtn" onclick="startApp()">Open Camera</button>
   <div id="errmsg"></div>
 </div>
 
-<div id="overlay">
-  <div id="topbar">
-    <span id="appname">ARInspect</span>
-    <button id="undobtn" onclick="undo()">↩ Undo</button>
-  </div>
-  <div id="statusbar">Initializing...</div>
-  <div id="modehint"></div>
+<!-- CAMERA -->
+<video id="cam" autoplay playsinline muted></video>
 
-  <div id="toolbar">
-    <div id="moderow">
-      <div class="mbtn" id="mb-ceil" onclick="setMode('ceil')"><span class="ic">↓</span>Ceiling</div>
-      <div class="mbtn" id="mb-slab" onclick="setMode('slab')"><span class="ic">▬</span>Slab</div>
-      <div class="mbtn" id="mb-col" onclick="setMode('col')"><span class="ic">▪</span>Column</div>
-      <div class="mbtn" id="mb-live" onclick="setMode('live')"><span class="ic">🧍</span>Live</div>
-      <div class="mbtn a-view" id="mb-view" onclick="setMode('view')"><span class="ic">👁</span>View</div>
-    </div>
-    <div id="legend">
-      <div class="li"><div class="ld" style="background:#4A9EFF;"></div>Dead load (ceiling)</div>
-      <div class="li"><div class="ld" style="background:#FF6B35;"></div>Live load (person)</div>
-      <div class="li"><div class="ld" style="background:#A78BFA;"></div>Column axial load</div>
-      <div class="li"><div class="ld" style="background:#FFCC00;"></div>Slab dead load</div>
-    </div>
-    <button id="clrbtn" onclick="clearAll()">Clear all</button>
-  </div>
+<!-- 3D WEBGL CANVAS -->
+<canvas id="cv3d"></canvas>
+
+<!-- TAP SURFACE -->
+<canvas id="tap"></canvas>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <span id="appname">ARInspect</span>
+  <button id="undobtn" onclick="undo()">↩ Undo</button>
 </div>
 
-<div id="reticleStatus"></div>
+<!-- MODE HINT -->
+<div id="modehint"></div>
+
+<!-- GYRO BADGE -->
+<div id="gyro-badge">⬤ Gyro Active</div>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div id="moderow">
+    <div class="mbtn" id="mb-ceil" onclick="setMode('ceil')"><span class="ic">↓</span>Ceiling</div>
+    <div class="mbtn" id="mb-slab" onclick="setMode('slab')"><span class="ic">▬</span>Slab</div>
+    <div class="mbtn" id="mb-col"  onclick="setMode('col')"><span class="ic">▪</span>Column</div>
+    <div class="mbtn" id="mb-live" onclick="setMode('live')"><span class="ic">🧍</span>Live</div>
+    <div class="mbtn a-view" id="mb-view" onclick="setMode('view')"><span class="ic">👁</span>View</div>
+  </div>
+  <div id="legend">
+    <div class="li"><div class="ld" style="background:#4A9EFF"></div>Dead load (ceiling)</div>
+    <div class="li"><div class="ld" style="background:#FF6B35"></div>Live load (person)</div>
+    <div class="li"><div class="ld" style="background:#A78BFA"></div>Column axial load</div>
+    <div class="li"><div class="ld" style="background:#FFCC00"></div>Slab dead load</div>
+    <div class="li"><div class="ld" style="background:#44CC78;border-radius:50%"></div>Upward reaction</div>
+    <div class="li"><div class="ld" style="background:rgba(255,255,255,.15);border:1px dashed rgba(255,255,255,.3)"></div>Frame guide</div>
+  </div>
+  <button id="clrbtn" onclick="clearAll()">Clear all elements</button>
+</div>
+
 <div id="toast"></div>
 
-<div id="resizePanel">
-  <div class="rlabel"><span id="resizeTitle">Slab width</span><span class="rval" id="resizeVal">1.0 m</span></div>
-  <input type="range" id="resizeSlider" min="0.3" max="3" step="0.1" value="1.0"/>
-  <div id="resizeBtns">
-    <button id="resizeCancel" onclick="cancelResize()">Cancel</button>
-    <button id="resizeConfirm" onclick="confirmResize()">Place</button>
-  </div>
-</div>
+<script>
+'use strict';
 
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+// ═══════════════════════════════════════════════════
+// THREE.JS MINI — lightweight 3D math only (no renderer)
+// We use WebGL directly for performance
+// ═══════════════════════════════════════════════════
 
-let camera, scene, renderer, session;
-let reticle, hitTestSource = null, hitTestSourceRequested = false;
-let placedItems = [];
-let mode = 'view';
-let pending = null; // { type, color, pos, dimension }
+// ── State ──
+let cam, cv3d, gl, tapCv;
+let mode      = 'view';
+let running   = false;
+let phase     = 0;
+let elements  = [];   // all placed 3D elements
+let toolbarH  = 0;
 
-const COLORS = { ceil:0x4A9EFF, slab:0xFFCC00, col:0xA78BFA, live:0xFF6B35 };
-const LABELS = {
-  ceil:'Ceiling dead load grid placed',
-  slab:'Slab placed — adjacent load arrows active',
-  col:'Column placed — stacked load path to foundation',
-  live:'Live load placed'
+// ── Device orientation (gyro) ──
+let deviceAlpha = 0;  // compass
+let deviceBeta  = 0;  // front-back tilt
+let deviceGamma = 0;  // left-right tilt
+let gyroReady   = false;
+
+// ── Projection & view matrices ──
+let projMatrix = new Float32Array(16);
+let viewMatrix = new Float32Array(16);
+
+// ── Colors (same as web version) ──
+const C = {
+  dead:   [0.290, 0.620, 1.000, 0.88],
+  live:   [1.000, 0.420, 0.208, 0.88],
+  col:    [0.655, 0.545, 0.980, 0.88],
+  slab:   [0.937, 0.624, 0.000, 0.88],
+  react:  [0.267, 0.800, 0.471, 0.75],
+  guide:  [1.000, 1.000, 1.000, 0.05],
 };
-const HINTS = {
-  ceil:'↑ Tap on the ceiling to place dead load arrows',
-  slab:'↑ Tap on any slab or beam',
-  col:'↑ Tap on any column in the view',
-  live:'↑ Tap where a person is standing',
-  view:''
-};
 
-window.startApp = async function() {
-  const btn = document.getElementById('startbtn');
-  btn.textContent = 'Starting AR…';
-  btn.disabled = true;
+// ═══════════════════════════════════════════════════
+// WEBGL SETUP
+// ═══════════════════════════════════════════════════
+let prog, aPos, aCol, uMVP;
 
-  if (!navigator.xr) {
-    showErr('WebXR not available. Use Chrome on Android.');
-    return;
-  }
+const VS = `
+attribute vec3 aPos;
+attribute vec4 aCol;
+uniform mat4 uMVP;
+varying vec4 vCol;
+void main(){
+  gl_Position = uMVP * vec4(aPos,1.0);
+  vCol = aCol;
+}`;
 
-  const supported = await navigator.xr.isSessionSupported('immersive-ar').catch(()=>false);
-  if (!supported) {
-    showErr('AR not supported on this device/browser. Update Chrome and "Google Play Services for AR".');
-    return;
-  }
+const FS = `
+precision mediump float;
+varying vec4 vCol;
+void main(){
+  gl_FragColor = vCol;
+}`;
 
-  initThree();
+function initGL() {
+  cv3d = document.getElementById('cv3d');
+  cv3d.width  = window.innerWidth;
+  cv3d.height = window.innerHeight;
 
-  try {
-    session = await navigator.xr.requestSession('immersive-ar', {
-      requiredFeatures: ['hit-test'],
-      optionalFeatures: ['anchors', 'dom-overlay'],
-      domOverlay: { root: document.getElementById('overlay') }
-    });
-  } catch(e) {
-    showErr('Failed to start AR session: ' + e.message);
-    return;
-  }
-
-  document.getElementById('start').style.display = 'none';
-  document.getElementById('overlay').style.display = 'block';
-  document.getElementById('reticleStatus').style.display = 'block';
-
-  renderer.xr.setReferenceSpaceType('local');
-  await renderer.xr.setSession(session);
-
-  setStatus('Scanning for surfaces… move phone slowly');
-  setMode('view');
-  renderer.setAnimationLoop(render);
-
-  session.addEventListener('end', () => {
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('reticleStatus').style.display = 'none';
-    document.getElementById('start').style.display = 'flex';
-    btn.textContent = 'Start AR';
-    btn.disabled = false;
+  gl = cv3d.getContext('webgl', {
+    alpha: true, premultipliedAlpha: false,
+    antialias: true, depth: true
   });
-};
+  if (!gl) { alert('WebGL not supported'); return false; }
 
-function showErr(msg) {
-  const err = document.getElementById('errmsg');
-  err.textContent = msg;
-  err.style.display = 'block';
-  const btn = document.getElementById('startbtn');
-  btn.textContent = 'Try Again';
-  btn.disabled = false;
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LEQUAL);
+  gl.clearColor(0, 0, 0, 0);
+
+  // Compile shaders
+  const vs = compileShader(gl.VERTEX_SHADER,   VS);
+  const fs = compileShader(gl.FRAGMENT_SHADER, FS);
+  prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  aPos = gl.getAttribLocation(prog,  'aPos');
+  aCol = gl.getAttribLocation(prog,  'aCol');
+  uMVP = gl.getUniformLocation(prog, 'uMVP');
+
+  setPerspective(60, window.innerWidth / window.innerHeight, 0.01, 100);
+  return true;
 }
 
-function initThree() {
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
-
-  renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.xr.enabled = true;
-  renderer.domElement.style.position = 'fixed';
-  renderer.domElement.style.inset = '0';
-  renderer.domElement.style.zIndex = '1';
-  document.body.appendChild(renderer.domElement);
-
-  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-  scene.add(light);
-
-  reticle = new THREE.Mesh(
-    new THREE.RingGeometry(0.06, 0.08, 32).rotateX(-Math.PI/2),
-    new THREE.MeshBasicMaterial({ color: 0x44CC78 })
-  );
-  reticle.matrixAutoUpdate = false;
-  reticle.visible = false;
-  scene.add(reticle);
-
-  const controller = renderer.xr.getController(0);
-  controller.addEventListener('select', onSelect);
-  scene.add(controller);
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
+function compileShader(type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  return sh;
 }
 
-async function onSelect() {
-  try {
-    if (mode === 'view') return;
-    if (!reticle.visible) { toast('No surface detected here yet'); return; }
-    if (pending) { toast('Finish current placement first'); return; }
+// ═══════════════════════════════════════════════════
+// MATRIX MATH
+// ═══════════════════════════════════════════════════
+function mat4Identity(m) {
+  for (let i = 0; i < 16; i++) m[i] = 0;
+  m[0]=m[5]=m[10]=m[15]=1;
+}
 
-    const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
-    const color = COLORS[mode];
-
-    if (mode === 'slab' || mode === 'col') {
-      pending = { type: mode, color, pos, dimension: 1.0, obj: null };
-      pending.obj = createMarker(mode, color, pending.dimension);
-      pending.obj.position.copy(pos);
-      scene.add(pending.obj);
-
-      const panel = document.getElementById('resizePanel');
-      const title = document.getElementById('resizeTitle');
-      const slider = document.getElementById('resizeSlider');
-      title.textContent = mode === 'slab' ? 'Slab width' : 'Column height';
-      slider.value = pending.dimension;
-      updateResizeLabel(pending.dimension, 'm');
-      panel.style.display = 'block';
-      document.getElementById('toolbar').style.display = 'none';
-      setStatus('Drag slider to size — then tap Place');
-      return;
-    }
-
-    await placeFinal(mode, color, pos, null);
-  } catch(e) {
-    console.error('onSelect error', e);
-    toast('Error placing: ' + e.message);
-    setStatus('Error: ' + e.message);
-    pending = null;
-    document.getElementById('resizePanel').style.display = 'none';
-    document.getElementById('toolbar').style.display = 'block';
+function mat4Mul(out, a, b) {
+  for (let i=0;i<4;i++) for (let j=0;j<4;j++) {
+    out[j*4+i]=0;
+    for (let k=0;k<4;k++) out[j*4+i]+=a[k*4+i]*b[j*4+k];
   }
 }
 
-async function placeFinal(type, color, pos, dimension) {
-  try {
-    const frame = renderer.xr.getFrame();
-    const referenceSpace = renderer.xr.getReferenceSpace();
+function setPerspective(fovDeg, aspect, near, far) {
+  const f = 1 / Math.tan(fovDeg * Math.PI / 360);
+  const nf = 1 / (near - far);
+  mat4Identity(projMatrix);
+  projMatrix[0]  = f / aspect;
+  projMatrix[5]  = f;
+  projMatrix[10] = (far + near) * nf;
+  projMatrix[11] = -1;
+  projMatrix[14] = 2 * far * near * nf;
+  projMatrix[15] = 0;
+}
 
-    let anchor = null;
-    try {
-      if (frame && frame.createAnchor) {
-        anchor = await frame.createAnchor(
-          new XRRigidTransform({ x:pos.x, y:pos.y, z:pos.z }),
-          referenceSpace
-        );
-      }
-    } catch(e) {
-      console.warn('Anchor failed, using static placement', e);
-    }
+function setView(alpha, beta, gamma) {
+  // Build view matrix from device orientation
+  // so 3D elements stay locked in world space
+  const a = alpha * Math.PI / 180;
+  const b = beta  * Math.PI / 180;
+  const g = gamma * Math.PI / 180;
 
-    const obj = createMarker(type, color, dimension);
-    if (!anchor) obj.position.copy(pos);
-    scene.add(obj);
-    placedItems.push({ anchor, object: obj, type, billboard: type === 'slab' });
+  mat4Identity(viewMatrix);
 
-    toast(LABELS[type]);
-    setStatus('Move phone to find a surface');
-  } catch(e) {
-    console.error('placeFinal error', e);
-    toast('Placement failed: ' + e.message);
-    setStatus('Placement failed: ' + e.message);
+  // Rotation around X (beta — forward/back tilt)
+  const cosB = Math.cos(-b), sinB = Math.sin(-b);
+  // Rotation around Z (gamma — left/right tilt)
+  const cosG = Math.cos(g),  sinG = Math.sin(g);
+  // Rotation around Y (alpha — compass)
+  const cosA = Math.cos(-a), sinA = Math.sin(-a);
+
+  // Combine rotations: Y * X * Z
+  viewMatrix[0]  =  cosA*cosG + sinA*sinB*sinG;
+  viewMatrix[1]  =  cosB*sinG;
+  viewMatrix[2]  = -sinA*cosG + cosA*sinB*sinG;
+  viewMatrix[4]  = -cosA*sinG + sinA*sinB*cosG;
+  viewMatrix[5]  =  cosB*cosG;
+  viewMatrix[6]  =  sinA*sinG + cosA*sinB*cosG;
+  viewMatrix[8]  =  sinA*cosB;
+  viewMatrix[9]  = -sinB;
+  viewMatrix[10] =  cosA*cosB;
+  viewMatrix[15] =  1;
+}
+
+// ═══════════════════════════════════════════════════
+// DRAW PRIMITIVES
+// ═══════════════════════════════════════════════════
+let mvpTemp = new Float32Array(16);
+let mvpTemp2 = new Float32Array(16);
+
+function drawMesh(vertices, colors, modelMatrix, mode3D) {
+  // MVP = proj * view * model
+  mat4Mul(mvpTemp,  viewMatrix,   modelMatrix);
+  mat4Mul(mvpTemp2, projMatrix,   mvpTemp);
+
+  gl.uniformMatrix4fv(uMVP, false, mvpTemp2);
+
+  // Position buffer
+  const vBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+
+  // Color buffer
+  const cBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(aCol);
+  gl.vertexAttribPointer(aCol, 4, gl.FLOAT, false, 0, 0);
+
+  gl.drawArrays(mode3D, 0, vertices.length / 3);
+
+  gl.deleteBuffer(vBuf);
+  gl.deleteBuffer(cBuf);
+}
+
+function makeModel(tx, ty, tz, rx, ry, rz, sx, sy, sz) {
+  const m = new Float32Array(16);
+  mat4Identity(m);
+
+  // Scale
+  const s = new Float32Array(16); mat4Identity(s);
+  s[0]=sx; s[5]=sy; s[10]=sz;
+
+  // Rotation X
+  const rx2 = new Float32Array(16); mat4Identity(rx2);
+  rx2[5]=Math.cos(rx); rx2[6]=Math.sin(rx);
+  rx2[9]=-Math.sin(rx); rx2[10]=Math.cos(rx);
+
+  // Rotation Y
+  const ry2 = new Float32Array(16); mat4Identity(ry2);
+  ry2[0]=Math.cos(ry); ry2[2]=-Math.sin(ry);
+  ry2[8]=Math.sin(ry); ry2[10]=Math.cos(ry);
+
+  // Translation
+  const t = new Float32Array(16); mat4Identity(t);
+  t[12]=tx; t[13]=ty; t[14]=tz;
+
+  let tmp = new Float32Array(16);
+  mat4Mul(tmp, rx2, s);
+  mat4Mul(m, ry2, tmp);
+  mat4Mul(tmp, t, m);
+  return tmp;
+}
+
+// Draw a single 3D arrow (shaft + head) pointing downward
+function drawArrow3D(x, y, z, color, length, phase2, userBeta, userGamma) {
+  const bob = Math.sin(phase * 2.1 + phase2) * 0.025;
+
+  // Build an orientation matrix that keeps arrow parallel to user
+  // The arrow always points "downward in world space" regardless of phone angle
+  const shaft_h = length * 0.55;
+  const head_r  = 0.028;
+
+  const shaftColor  = [...color];
+  const headColor   = [...color];
+
+  // Shaft — thin box going down
+  const shaftVerts = boxVerts(0, -(shaft_h/2), 0, 0.016, shaft_h, 0.016);
+  const shaftCols  = repeatColor(shaftColor, 36);
+  const shaftMat   = makeModel(x, y + bob, z, 0, 0, 0, 1, 1, 1);
+  drawMesh(shaftVerts, shaftCols, shaftMat, gl.TRIANGLES);
+
+  // Head — sphere approximation (octahedron)
+  const headVerts = octaVerts(0, -(shaft_h + head_r * 1.2), 0, head_r * 1.8, head_r);
+  const headCols  = repeatColor(headColor, headVerts.length / 3);
+  const headMat   = makeModel(x, y + bob, z, 0, 0, 0, 1, 1, 1);
+  drawMesh(headVerts, headCols, headMat, gl.TRIANGLES);
+}
+
+// Box made of triangles (6 faces * 2 triangles * 3 verts = 36 verts)
+function boxVerts(cx, cy, cz, w, h, d) {
+  const hx=w/2, hy=h/2, hz=d/2;
+  const x1=cx-hx,x2=cx+hx,y1=cy-hy,y2=cy+hy,z1=cz-hz,z2=cz+hz;
+  return [
+    x1,y2,z2, x2,y2,z2, x2,y1,z2,  x1,y2,z2, x2,y1,z2, x1,y1,z2, // front
+    x2,y2,z1, x1,y2,z1, x1,y1,z1,  x2,y2,z1, x1,y1,z1, x2,y1,z1, // back
+    x1,y2,z1, x1,y2,z2, x1,y1,z2,  x1,y2,z1, x1,y1,z2, x1,y1,z1, // left
+    x2,y2,z2, x2,y2,z1, x2,y1,z1,  x2,y2,z2, x2,y1,z1, x2,y1,z2, // right
+    x1,y2,z1, x2,y2,z1, x2,y2,z2,  x1,y2,z1, x2,y2,z2, x1,y2,z2, // top
+    x1,y1,z2, x2,y1,z2, x2,y1,z1,  x1,y1,z2, x2,y1,z1, x1,y1,z1, // bottom
+  ];
+}
+
+// Octahedron for arrowhead
+function octaVerts(cx, cy, cz, ry, rh) {
+  const top=[cx,cy+rh,cz], bot=[cx,cy-rh,cz];
+  const pts = [
+    [cx+ry,cy,cz], [cx,cy,cz+ry],
+    [cx-ry,cy,cz], [cx,cy,cz-ry]
+  ];
+  const v = [];
+  for (let i=0;i<4;i++) {
+    const a=pts[i], b=pts[(i+1)%4];
+    v.push(...top,...a,...b);
+    v.push(...bot,...b,...a);
+  }
+  return v;
+}
+
+function repeatColor(col, count) {
+  const out = [];
+  for (let i=0;i<count;i++) out.push(...col);
+  return out;
+}
+
+// Draw a flat plane indicator (thin box)
+function drawPlane(x, y, z, w, d, color, tilt) {
+  const verts = boxVerts(0, 0, 0, w, 0.005, d);
+  const cols  = repeatColor(color, 36);
+  const mat   = makeModel(x, y, z, tilt||0, 0, 0, 1, 1, 1);
+  drawMesh(verts, cols, mat, gl.TRIANGLES);
+}
+
+// Draw vertical line
+function drawLine(x1,y1,z1, x2,y2,z2, color) {
+  const verts = [x1,y1,z1, x2,y2,z2];
+  const cols  = [...color,...color];
+  const mat   = makeModel(0,0,0,0,0,0,1,1,1);
+  drawMesh(verts, cols, mat, gl.LINES);
+}
+
+// Draw grid of lines (for guides)
+function drawGuides() {
+  const gc = C.guide;
+  for (let i=-3;i<=3;i++) {
+    drawLine(i*0.4,-0.5,-2.5, i*0.4,-0.5,2.5, gc);
+    drawLine(-1.5,-0.5,i*0.4, 1.5,-0.5,i*0.4, gc);
   }
 }
 
-window.cancelResize = function() {
-  if (pending && pending.obj) scene.remove(pending.obj);
-  pending = null;
-  document.getElementById('resizePanel').style.display = 'none';
-  document.getElementById('toolbar').style.display = 'block';
-  setStatus('Move phone to find a surface');
-};
+// ═══════════════════════════════════════════════════
+// ELEMENT DRAWING — each type with its arrow pattern
+// ═══════════════════════════════════════════════════
 
-window.confirmResize = async function() {
-  if (!pending) return;
-  scene.remove(pending.obj);
-  document.getElementById('resizePanel').style.display = 'none';
-  document.getElementById('toolbar').style.display = 'block';
-  await placeFinal(pending.type, pending.color, pending.pos, pending.dimension);
-  pending = null;
-};
+function drawCeilingElement(el) {
+  // CEILING: Full 5×5 plane of arrows across slab
+  // Arrows stay locked at the ceiling height (positive Y in world)
+  const {wx, wy, wz} = el;
+  const rows = 5, cols2 = 5, gap = 0.22;
 
-function updateResizeLabel(val, unit) {
-  document.getElementById('resizeVal').textContent = parseFloat(val).toFixed(1) + ' ' + unit;
-}
+  // Draw ceiling slab plane first
+  const planeColor = [...C.dead]; planeColor[3] = 0.18;
+  drawPlane(wx, wy+0.02, wz, cols2*gap+0.1, rows*gap+0.1, planeColor);
 
-document.addEventListener('input', (e) => {
-  if (e.target && e.target.id === 'resizeSlider' && pending) {
-    pending.dimension = parseFloat(e.target.value);
-    updateResizeLabel(pending.dimension, 'm');
-    scene.remove(pending.obj);
-    pending.obj = createMarker(pending.type, pending.color, pending.dimension);
-    pending.obj.position.copy(pending.pos);
-    scene.add(pending.obj);
-  }
-});
+  // Ceiling border line
+  const lineColor = [...C.dead]; lineColor[3] = 0.5;
+  drawLine(wx-0.6, wy, wz-0.6,  wx+0.6, wy, wz-0.6, lineColor);
+  drawLine(wx-0.6, wy, wz+0.6,  wx+0.6, wy, wz+0.6, lineColor);
+  drawLine(wx-0.6, wy, wz-0.6,  wx-0.6, wy, wz+0.6, lineColor);
+  drawLine(wx+0.6, wy, wz-0.6,  wx+0.6, wy, wz+0.6, lineColor);
 
-function createMarker(type, color, dimension) {
-  const group = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color });
-
-  function makeArrow(x, y, z) {
-    const arrowGroup = new THREE.Group();
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.12, 10), mat);
-    shaft.position.y = 0.08;
-    arrowGroup.add(shaft);
-    const head = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.04, 10), mat);
-    head.rotation.x = Math.PI; // flip cone to point downward
-    head.position.y = 0.02;
-    arrowGroup.add(head);
-    arrowGroup.position.set(x, y, z);
-    return arrowGroup;
-  }
-
-  if (type === 'ceil') {
-    // Plane/grid of arrows simulating distributed ceiling load (fixed size)
-    const spacing = 0.12;
-    const gridSize = 3;
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        const x = (i - (gridSize-1)/2) * spacing;
-        const z = (j - (gridSize-1)/2) * spacing;
-        group.add(makeArrow(x, 0, z));
-      }
-    }
-  } else if (type === 'slab') {
-    // Row of adjacent arrows spanning the dragged width, spaced ~0.12m apart
-    const width = dimension || 1.0;
-    const spacing = 0.12;
-    const count = Math.max(2, Math.round(width / spacing) + 1);
-    const actualSpacing = width / (count - 1);
-    for (let i = 0; i < count; i++) {
-      const x = (i - (count-1)/2) * actualSpacing;
-      group.add(makeArrow(x, 0, 0));
-    }
-  } else if (type === 'col') {
-    // Arrows stacked down the dragged height, ~0.15m apart
-    const height = dimension || 1.0;
-    const vSpacing = 0.15;
-    const count = Math.max(2, Math.round(height / vSpacing) + 1);
-    const actualSpacing = height / (count - 1);
-    for (let i = 0; i < count; i++) {
-      group.add(makeArrow(0, -i * actualSpacing, 0));
-    }
-  } else {
-    // Live load - single arrow
-    group.add(makeArrow(0, 0, 0));
-  }
-
-  return group;
-}
-
-function render(timestamp, frame) {
-  if (frame) {
-    const referenceSpace = renderer.xr.getReferenceSpace();
-    const sess = renderer.xr.getSession();
-
-    if (!hitTestSourceRequested) {
-      sess.requestReferenceSpace('viewer').then(refSpace=>{
-        sess.requestHitTestSource({ space: refSpace }).then(source=>{
-          hitTestSource = source;
-        });
-      }).catch(e=> setStatus('Hit-test error: '+e.message));
-      sess.addEventListener('end', ()=>{ hitTestSourceRequested=false; hitTestSource=null; });
-      hitTestSourceRequested = true;
-    }
-
-    const reticleStatusEl = document.getElementById('reticleStatus');
-    if (hitTestSource) {
-      const results = frame.getHitTestResults(hitTestSource);
-      if (results.length > 0) {
-        const pose = results[0].getPose(referenceSpace);
-        reticle.visible = true;
-        reticle.matrix.fromArray(pose.transform.matrix);
-        reticleStatusEl.classList.add('found');
-        if (mode !== 'view') setStatus('Surface found — tap to place');
-      } else {
-        reticle.visible = false;
-        reticleStatusEl.classList.remove('found');
-        if (mode !== 'view') setStatus('Move phone slowly to find a surface');
-      }
-    }
-
-    placedItems.forEach(item=>{
-      if (item.anchor && item.anchor.anchorSpace) {
-        const pose = frame.getPose(item.anchor.anchorSpace, referenceSpace);
-        if (pose) {
-          // Only take POSITION from the anchor, ignore its rotation
-          const m = new THREE.Matrix4().fromArray(pose.transform.matrix);
-          const p = new THREE.Vector3();
-          p.setFromMatrixPosition(m);
-          item.object.position.copy(p);
-        }
-      }
-      if (item.billboard) {
-        // Face the row of arrows toward the camera, rotating only around Y (stay upright)
-        const camPos = new THREE.Vector3();
-        camera.getWorldPosition(camPos);
-        const dx = camPos.x - item.object.position.x;
-        const dz = camPos.z - item.object.position.z;
-        item.object.rotation.y = Math.atan2(dx, dz);
-      } else if (!item.object.userData.customRotation) {
-        item.object.quaternion.identity();
-      }
-    });
-
-    // Keep pending (mid-resize) slab preview billboarded too
-    if (pending && pending.type === 'slab' && pending.obj) {
-      const camPos = new THREE.Vector3();
-      camera.getWorldPosition(camPos);
-      const dx = camPos.x - pending.obj.position.x;
-      const dz = camPos.z - pending.obj.position.z;
-      pending.obj.rotation.y = Math.atan2(dx, dz);
+  // 5×5 grid of arrows pointing down from ceiling
+  for (let r=0; r<rows; r++) {
+    for (let c=0; c<cols2; c++) {
+      const ax = wx + (c - (cols2-1)/2) * gap;
+      const az = wz + (r - (rows-1)/2) * gap;
+      const ph = r * 0.7 + c * 0.5;
+      drawArrow3D(ax, wy, az, C.dead, 0.28, ph);
     }
   }
-  renderer.render(scene, camera);
 }
 
-window.setMode = function(m) {
-  // Cancel any stuck pending resize when switching modes
-  if (pending && pending.obj) { scene.remove(pending.obj); }
-  pending = null;
-  document.getElementById('resizePanel').style.display = 'none';
-  document.getElementById('toolbar').style.display = 'block';
+function drawSlabElement(el) {
+  // SLAB: Grid of adjacent arrows across beam width AND depth
+  // Shows load distribution across the full slab face
+  const {wx, wy, wz} = el;
 
-  mode = m;
-  const classes = { ceil:'a-ceil', slab:'a-slab', col:'a-col', live:'a-live', view:'a-view' };
-  Object.keys(classes).forEach(id=>{
-    const b = document.getElementById('mb-'+id);
-    b.className = 'mbtn';
-    if (id === m) b.classList.add(classes[id]);
-  });
-  const hint = document.getElementById('modehint');
-  if (m === 'view') { hint.style.display = 'none'; }
-  else { hint.textContent = HINTS[m]; hint.style.display = 'block'; toast(HINTS[m]); }
-  setStatus(m === 'view' ? 'View mode — select a tool to place markers' : 'Move phone to find a surface');
-};
+  // Slab body — flat yellow plane
+  const slabColor = [...C.slab]; slabColor[3] = 0.7;
+  drawPlane(wx, wy, wz, 0.85, 0.06, slabColor);
 
-window.undo = function() {
-  if (placedItems.length) {
-    const last = placedItems.pop();
-    scene.remove(last.object);
-    toast('Removed last element');
-  } else toast('Nothing to undo');
-};
+  // Adjacent dead load arrows in a 4×2 grid below slab
+  const rows = 2, cols2 = 5, gapX = 0.16, gapZ = 0.18;
+  for (let r=0; r<rows; r++) {
+    for (let c=0; c<cols2; c++) {
+      const ax = wx + (c - (cols2-1)/2) * gapX;
+      const az = wz + (r - (rows-1)/2) * gapZ;
+      const ay = wy - 0.04;
+      const ph = r * 0.8 + c * 0.55;
+      drawArrow3D(ax, ay, az, C.slab, 0.22, ph);
+    }
+  }
 
-window.clearAll = function() {
-  placedItems.forEach(item => scene.remove(item.object));
-  placedItems = [];
-  toast('Cleared all elements');
-};
-
-function setStatus(msg) {
-  const el = document.getElementById('statusbar');
-  if (el) el.textContent = msg;
+  // Reaction arrows (upward — green) at beam ends
+  for (let side=-1; side<=1; side+=2) {
+    const rx = wx + side * 0.40;
+    // upward arrow — invert direction by flipping model
+    const bob = Math.sin(phase * 2.1 + side * 1.3) * 0.025;
+    const shaft_h = 0.18;
+    const upColor = [...C.react];
+    const shaftV = boxVerts(0, shaft_h/2, 0, 0.014, shaft_h, 0.014);
+    const shaftC = repeatColor(upColor, 36);
+    const mat    = makeModel(rx, wy-0.18+bob, wz, 0,0,0,1,1,1);
+    drawMesh(shaftV, shaftC, mat, gl.TRIANGLES);
+  }
 }
 
-let toastT = null;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastT);
-  toastT = setTimeout(()=> el.classList.remove('show'), 2400);
-}
-</script>
-</body>
-</html>
+function drawColumnElement(el) {
+  // COLUMN: Vertical STACK of arrows showing axial load path
+  // From column head all the way down through column to foundation
+  const {wx, wy, wz} = el;
+
+  // Column body — thin vertical box
+  const colH = 1.1;
+  const colColor = [...C.col]; colColor[3] = 0.65;
+  const colVerts = boxVerts(0, -colH/2, 0, 0.055, colH, 0.055);
+  const colCols  = repeatColor(colColor, 36);
+  const colMat   = makeModel(wx, wy-0.5, wz, 0,0,0,1,1,1);
+  drawMesh(colVerts, colCols, colMat, gl.TRIANGLES);
+
+  // Cross section at t
