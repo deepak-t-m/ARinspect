@@ -7,40 +7,33 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100vw;height:100vh;overflow:hidden;
-  background:#000;font-family:-apple-system,'Segoe UI',sans-serif;
-  touch-action:none;}
+  background:#000;font-family:-apple-system,sans-serif;touch-action:none;}
 
-/* Camera */
 #cam{position:fixed;inset:0;width:100%;height:100%;
   object-fit:cover;display:none;z-index:1;}
 
-/* 3D Canvas */
-#cv3d{position:fixed;inset:0;width:100%;height:100%;
-  display:none;z-index:2;pointer-events:none;}
+#cv{position:fixed;inset:0;width:100%;height:100%;
+  display:none;z-index:2;}
 
-/* Tap canvas (receives touch) */
-#tap{position:fixed;inset:0;width:100%;height:100%;
-  z-index:3;display:none;}
-
-/* ── START SCREEN ── */
+/* START */
 #start{position:fixed;inset:0;z-index:999;
   background:linear-gradient(160deg,#06080F,#0D1525);
   display:flex;flex-direction:column;align-items:center;
   justify-content:center;padding:32px 24px;text-align:center;color:#fff;}
 .logo{font-size:11px;font-weight:800;letter-spacing:.2em;
-  color:#4A9EFF;margin-bottom:18px;text-transform:uppercase;}
+  color:#4A9EFF;margin-bottom:16px;text-transform:uppercase;}
 h1{font-size:30px;font-weight:900;line-height:1.1;margin-bottom:10px;}
 h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .desc{font-size:13px;color:rgba(255,255,255,.42);
-  line-height:1.8;margin-bottom:22px;max-width:280px;}
+  line-height:1.8;margin-bottom:20px;max-width:280px;}
 .feat{width:100%;max-width:310px;background:rgba(255,255,255,.05);
   border:1px solid rgba(255,255,255,.08);border-radius:14px;
   padding:14px 16px;margin-bottom:22px;text-align:left;}
-.feat-row{display:flex;align-items:flex-start;gap:10px;
+.fr{display:flex;align-items:flex-start;gap:9px;
   margin-bottom:8px;font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;}
-.feat-row:last-child{margin-bottom:0;}
-.fdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.fr:last-child{margin-bottom:0;}
+.fd{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
 #startbtn{width:100%;max-width:310px;padding:16px;
   background:linear-gradient(135deg,#4A9EFF,#A78BFA);
   color:#fff;font-size:15px;font-weight:800;border:none;
@@ -48,33 +41,31 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 #startbtn:active{opacity:.82;}
 #errmsg{display:none;margin-top:12px;padding:11px 14px;
   background:rgba(255,60,60,.1);border:1px solid rgba(255,60,60,.3);
-  border-radius:10px;font-size:11px;color:#FF8888;
-  line-height:1.6;max-width:300px;}
+  border-radius:10px;font-size:11px;color:#FF8888;line-height:1.6;max-width:300px;}
 
-/* ── TOP BAR ── */
+/* TOP BAR */
 #topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:10;
   background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);
   padding:12px 16px 22px;
   flex-direction:row;align-items:center;justify-content:space-between;}
 #appname{font-size:14px;font-weight:900;color:#fff;letter-spacing:.04em;}
-#undobtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
-  border-radius:20px;padding:5px 14px;
-  font-size:12px;font-weight:700;color:#fff;cursor:pointer;}
-#undobtn:active{opacity:.7;}
+.tbpill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;
+  color:#fff;border:none;}
+.tbpill:active{opacity:.7;}
 
-/* ── TOOLBAR ── */
+/* TOOLBAR */
 #toolbar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:10;
   background:rgba(6,8,15,.97);
   border-top:1px solid rgba(255,255,255,.07);
-  border-radius:20px 20px 0 0;padding:12px 12px 28px;}
-
+  border-radius:20px 20px 0 0;padding:12px 12px 26px;}
 #moderow{display:flex;gap:6px;margin-bottom:10px;}
 .mbtn{flex:1;display:flex;flex-direction:column;align-items:center;
   gap:3px;padding:9px 2px;border-radius:12px;cursor:pointer;
   border:1.5px solid rgba(255,255,255,.07);
   background:rgba(255,255,255,.03);
   color:rgba(255,255,255,.4);font-size:10px;font-weight:700;
-  -webkit-tap-highlight-color:transparent;user-select:none;transition:all .12s;}
+  -webkit-tap-highlight-color:transparent;user-select:none;}
 .mbtn:active{transform:scale(.92);}
 .mbtn .ic{font-size:17px;line-height:1;}
 .mbtn.a-ceil{background:rgba(74,158,255,.18);border-color:#4A9EFF;color:#4A9EFF;}
@@ -82,34 +73,26 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 .mbtn.a-col{background:rgba(167,139,250,.18);border-color:#A78BFA;color:#A78BFA;}
 .mbtn.a-live{background:rgba(255,107,53,.18);border-color:#FF6B35;color:#FF6B35;}
 .mbtn.a-view{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff;}
-
 #legend{display:grid;grid-template-columns:1fr 1fr;
   gap:5px 10px;margin-bottom:10px;}
 .li{display:flex;align-items:center;gap:6px;
   font-size:10px;color:rgba(255,255,255,.45);}
 .ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
-
 #clrbtn{width:100%;padding:9px;border-radius:10px;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
   color:rgba(255,255,255,.35);font-size:11px;font-weight:700;cursor:pointer;}
 #clrbtn:active{opacity:.6;}
-
-/* Mode hint */
-#modehint{display:none;position:fixed;top:60px;left:50%;
-  transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;
+#modehint{display:none;position:fixed;top:62px;left:50%;
+  transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;
   padding:7px 16px;border-radius:20px;font-size:11px;font-weight:600;
   white-space:nowrap;z-index:11;border:1px solid rgba(255,255,255,.1);}
-
-/* Toast */
 #toast{position:fixed;top:72px;left:50%;transform:translateX(-50%);
   background:rgba(6,10,22,.95);color:#fff;padding:7px 16px;
   border-radius:20px;font-size:12px;font-weight:600;
   border:1px solid rgba(255,255,255,.1);opacity:0;
   transition:opacity .22s;pointer-events:none;z-index:999;white-space:nowrap;}
 #toast.show{opacity:1;}
-
-/* Gyro indicator */
-#gyro-badge{position:fixed;top:60px;right:14px;z-index:11;
+#gyrobadge{position:fixed;top:62px;right:14px;z-index:11;
   background:rgba(68,204,120,.15);border:1px solid rgba(68,204,120,.3);
   border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;
   color:#44CC78;display:none;}
@@ -117,43 +100,33 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 </head>
 <body>
 
-<!-- START -->
 <div id="start">
   <div class="logo">ARInspect</div>
   <h1>Live Structural<br/><span>Load Visualizer</span></h1>
-  <p class="desc">Point camera at your classroom. Tap to place 3D load arrows that stay locked in real space as you move.</p>
+  <p class="desc">Point camera at your classroom. Tap to place 3D load arrows that stay locked in real world space as you move the phone.</p>
   <div class="feat">
-    <div class="feat-row"><div class="fdot" style="background:#4A9EFF"></div>Ceiling — full plane of arrows across slab, stay locked overhead</div>
-    <div class="feat-row"><div class="fdot" style="background:#FFCC00"></div>Slab — grid of adjacent arrows across beam width, parallel to slab face</div>
-    <div class="feat-row"><div class="fdot" style="background:#A78BFA"></div>Column — vertical stack of arrows showing axial load path down to foundation</div>
-    <div class="feat-row"><div class="fdot" style="background:#FF6B35"></div>Live — person silhouette with live load arrows, always faces you</div>
+    <div class="fr"><div class="fd" style="background:#4A9EFF"></div>Ceiling — 5×5 plane of dead load arrows locked at ceiling height</div>
+    <div class="fr"><div class="fd" style="background:#FFCC00"></div>Slab — 3×4 grid of adjacent arrows across full slab face</div>
+    <div class="fr"><div class="fd" style="background:#A78BFA"></div>Column — vertical stack of 5 arrows showing axial load path down</div>
+    <div class="fr"><div class="fd" style="background:#FF6B35"></div>Live — person silhouette with live load arrows always facing you</div>
   </div>
   <button id="startbtn" onclick="startApp()">Open Camera</button>
   <div id="errmsg"></div>
 </div>
 
-<!-- CAMERA -->
 <video id="cam" autoplay playsinline muted></video>
+<canvas id="cv"></canvas>
 
-<!-- 3D WEBGL CANVAS -->
-<canvas id="cv3d"></canvas>
-
-<!-- TAP SURFACE -->
-<canvas id="tap"></canvas>
-
-<!-- TOP BAR -->
 <div id="topbar">
   <span id="appname">ARInspect</span>
-  <button id="undobtn" onclick="undo()">↩ Undo</button>
+  <div style="display:flex;gap:8px;">
+    <button class="tbpill" onclick="undo()">↩ Undo</button>
+  </div>
 </div>
 
-<!-- MODE HINT -->
 <div id="modehint"></div>
+<div id="gyrobadge">⬤ Gyro Active</div>
 
-<!-- GYRO BADGE -->
-<div id="gyro-badge">⬤ Gyro Active</div>
-
-<!-- TOOLBAR -->
 <div id="toolbar">
   <div id="moderow">
     <div class="mbtn" id="mb-ceil" onclick="setMode('ceil')"><span class="ic">↓</span>Ceiling</div>
@@ -176,386 +149,713 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 <div id="toast"></div>
 
 <script>
-'use strict';
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let cam, cv, ctx;
+let mode     = 'view';
+let phase    = 0;
+let elements = [];
+let toolbarH = 0;
+let running  = false;
 
-// ═══════════════════════════════════════════════════
-// THREE.JS MINI — lightweight 3D math only (no renderer)
-// We use WebGL directly for performance
-// ═══════════════════════════════════════════════════
+// Gyro state
+let pitch = 0;   // up/down tilt  (beta)
+let yaw   = 0;   // left/right    (gamma)
+let roll  = 0;   // rotation      (alpha)
+let gyroOn = false;
 
-// ── State ──
-let cam, cv3d, gl, tapCv;
-let mode      = 'view';
-let running   = false;
-let phase     = 0;
-let elements  = [];   // all placed 3D elements
-let toolbarH  = 0;
+// Virtual camera for 3D→2D projection
+const FOV    = 60;
+const DEPTH  = 380; // projection strength
 
-// ── Device orientation (gyro) ──
-let deviceAlpha = 0;  // compass
-let deviceBeta  = 0;  // front-back tilt
-let deviceGamma = 0;  // left-right tilt
-let gyroReady   = false;
-
-// ── Projection & view matrices ──
-let projMatrix = new Float32Array(16);
-let viewMatrix = new Float32Array(16);
-
-// ── Colors (same as web version) ──
-const C = {
-  dead:   [0.290, 0.620, 1.000, 0.88],
-  live:   [1.000, 0.420, 0.208, 0.88],
-  col:    [0.655, 0.545, 0.980, 0.88],
-  slab:   [0.937, 0.624, 0.000, 0.88],
-  react:  [0.267, 0.800, 0.471, 0.75],
-  guide:  [1.000, 1.000, 1.000, 0.05],
+// Colors
+const COL = {
+  dead:   '#4A9EFF',
+  live:   '#FF6B35',
+  col:    '#A78BFA',
+  slab:   '#FFCC00',
+  react:  '#44CC78',
+  guide:  'rgba(255,255,255,0.05)'
 };
 
-// ═══════════════════════════════════════════════════
-// WEBGL SETUP
-// ═══════════════════════════════════════════════════
-let prog, aPos, aCol, uMVP;
+// ═══════════════════════════════════════════
+// 3D → 2D PROJECTION
+// Projects a 3D world point to 2D screen
+// Accounts for device orientation via gyro
+// ═══════════════════════════════════════════
+function project(x3, y3, z3) {
+  const W = cv.width, H = cv.height;
 
-const VS = `
-attribute vec3 aPos;
-attribute vec4 aCol;
-uniform mat4 uMVP;
-varying vec4 vCol;
-void main(){
-  gl_Position = uMVP * vec4(aPos,1.0);
-  vCol = aCol;
-}`;
+  // Apply gyro rotation to keep points locked in world space
+  // Pitch rotation (beta — tilting phone up/down)
+  const cosPitch = Math.cos(-pitch);
+  const sinPitch = Math.sin(-pitch);
+  const y3r = y3 * cosPitch - z3 * sinPitch;
+  const z3r = y3 * sinPitch + z3 * cosPitch;
 
-const FS = `
-precision mediump float;
-varying vec4 vCol;
-void main(){
-  gl_FragColor = vCol;
-}`;
+  // Yaw rotation (gamma — tilting phone left/right)
+  const cosYaw = Math.cos(-yaw);
+  const sinYaw = Math.sin(-yaw);
+  const x3r = x3 * cosYaw + z3r * sinYaw;
+  const z3f = -x3 * sinYaw + z3r * cosYaw;
 
-function initGL() {
-  cv3d = document.getElementById('cv3d');
-  cv3d.width  = window.innerWidth;
-  cv3d.height = window.innerHeight;
+  // Perspective divide
+  const zOff = z3f + DEPTH;
+  if (zOff <= 0) return null;
 
-  gl = cv3d.getContext('webgl', {
-    alpha: true, premultipliedAlpha: false,
-    antialias: true, depth: true
-  });
-  if (!gl) { alert('WebGL not supported'); return false; }
+  const scale = DEPTH / zOff;
+  const sx = W / 2 + x3r * scale;
+  const sy = H / 2 - y3r * scale;
 
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  gl.enable(gl.DEPTH_TEST);
-  gl.depthFunc(gl.LEQUAL);
-  gl.clearColor(0, 0, 0, 0);
-
-  // Compile shaders
-  const vs = compileShader(gl.VERTEX_SHADER,   VS);
-  const fs = compileShader(gl.FRAGMENT_SHADER, FS);
-  prog = gl.createProgram();
-  gl.attachShader(prog, vs);
-  gl.attachShader(prog, fs);
-  gl.linkProgram(prog);
-  gl.useProgram(prog);
-
-  aPos = gl.getAttribLocation(prog,  'aPos');
-  aCol = gl.getAttribLocation(prog,  'aCol');
-  uMVP = gl.getUniformLocation(prog, 'uMVP');
-
-  setPerspective(60, window.innerWidth / window.innerHeight, 0.01, 100);
-  return true;
+  return { x: sx, y: sy, scale: scale, z: z3f };
 }
 
-function compileShader(type, src) {
-  const sh = gl.createShader(type);
-  gl.shaderSource(sh, src);
-  gl.compileShader(sh);
-  return sh;
+// ═══════════════════════════════════════════
+// DRAW ARROW — single bouncing arrow
+// dir: 'down'|'up'
+// ═══════════════════════════════════════════
+function drawArrow(x3, y3, z3, color, length, ph, dir) {
+  length = length || 55;
+  ph     = ph     || 0;
+  dir    = dir    || 'down';
+
+  const bob = Math.sin(phase * 2.1 + ph) * 6;
+  const sign = dir === 'down' ? 1 : -1;
+
+  // Tip of arrow
+  const tipY = y3 + sign * (length * 0.55 + bob);
+  const midY = y3 + sign * (length * 0.25 + bob);
+
+  const p1 = project(x3, y3 + bob, z3);
+  const p2 = project(x3, tipY,     z3);
+  const pm = project(x3, midY,     z3);
+
+  if (!p1 || !p2 || !pm) return;
+
+  const s = p1.scale;
+
+  ctx.save();
+  ctx.globalAlpha = 0.88;
+  ctx.strokeStyle = color;
+  ctx.fillStyle   = color;
+  ctx.lineWidth   = Math.max(1.5, 2.5 * s);
+  ctx.lineCap     = 'round';
+
+  // Shaft
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y);
+  ctx.lineTo(pm.x, pm.y);
+  ctx.stroke();
+
+  // Arrowhead
+  const hw = Math.max(5, 10 * s);
+  const hl = Math.max(6, 14 * s);
+  const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+  ctx.beginPath();
+  ctx.moveTo(p2.x, p2.y);
+  ctx.lineTo(
+    p2.x - hl * Math.cos(angle - Math.PI/6),
+    p2.y - hl * Math.sin(angle - Math.PI/6));
+  ctx.lineTo(
+    p2.x - hl * Math.cos(angle + Math.PI/6),
+    p2.y - hl * Math.sin(angle + Math.PI/6));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
-// ═══════════════════════════════════════════════════
-// MATRIX MATH
-// ═══════════════════════════════════════════════════
-function mat4Identity(m) {
-  for (let i = 0; i < 16; i++) m[i] = 0;
-  m[0]=m[5]=m[10]=m[15]=1;
+// ═══════════════════════════════════════════
+// DRAW LABEL
+// ═══════════════════════════════════════════
+function drawLabel(x3, y3, z3, text, color) {
+  const p = project(x3, y3, z3);
+  if (!p) return;
+  ctx.save();
+  ctx.font = `bold ${Math.max(9, 11 * p.scale)}px -apple-system,sans-serif`;
+  ctx.fillStyle   = color;
+  ctx.textAlign   = 'center';
+  ctx.globalAlpha = 0.85;
+  ctx.fillText(text, p.x, p.y);
+  ctx.restore();
 }
 
-function mat4Mul(out, a, b) {
-  for (let i=0;i<4;i++) for (let j=0;j<4;j++) {
-    out[j*4+i]=0;
-    for (let k=0;k<4;k++) out[j*4+i]+=a[k*4+i]*b[j*4+k];
-  }
+// ═══════════════════════════════════════════
+// DRAW 3D LINE
+// ═══════════════════════════════════════════
+function drawLine3D(x1,y1,z1, x2,y2,z2, color, alpha) {
+  const a = project(x1,y1,z1);
+  const b = project(x2,y2,z2);
+  if (!a||!b) return;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = 1.5;
+  ctx.globalAlpha = alpha || 0.4;
+  ctx.setLineDash([5,6]);
+  ctx.beginPath();
+  ctx.moveTo(a.x,a.y);
+  ctx.lineTo(b.x,b.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
 }
 
-function setPerspective(fovDeg, aspect, near, far) {
-  const f = 1 / Math.tan(fovDeg * Math.PI / 360);
-  const nf = 1 / (near - far);
-  mat4Identity(projMatrix);
-  projMatrix[0]  = f / aspect;
-  projMatrix[5]  = f;
-  projMatrix[10] = (far + near) * nf;
-  projMatrix[11] = -1;
-  projMatrix[14] = 2 * far * near * nf;
-  projMatrix[15] = 0;
-}
-
-function setView(alpha, beta, gamma) {
-  // Build view matrix from device orientation
-  // so 3D elements stay locked in world space
-  const a = alpha * Math.PI / 180;
-  const b = beta  * Math.PI / 180;
-  const g = gamma * Math.PI / 180;
-
-  mat4Identity(viewMatrix);
-
-  // Rotation around X (beta — forward/back tilt)
-  const cosB = Math.cos(-b), sinB = Math.sin(-b);
-  // Rotation around Z (gamma — left/right tilt)
-  const cosG = Math.cos(g),  sinG = Math.sin(g);
-  // Rotation around Y (alpha — compass)
-  const cosA = Math.cos(-a), sinA = Math.sin(-a);
-
-  // Combine rotations: Y * X * Z
-  viewMatrix[0]  =  cosA*cosG + sinA*sinB*sinG;
-  viewMatrix[1]  =  cosB*sinG;
-  viewMatrix[2]  = -sinA*cosG + cosA*sinB*sinG;
-  viewMatrix[4]  = -cosA*sinG + sinA*sinB*cosG;
-  viewMatrix[5]  =  cosB*cosG;
-  viewMatrix[6]  =  sinA*sinG + cosA*sinB*cosG;
-  viewMatrix[8]  =  sinA*cosB;
-  viewMatrix[9]  = -sinB;
-  viewMatrix[10] =  cosA*cosB;
-  viewMatrix[15] =  1;
-}
-
-// ═══════════════════════════════════════════════════
-// DRAW PRIMITIVES
-// ═══════════════════════════════════════════════════
-let mvpTemp = new Float32Array(16);
-let mvpTemp2 = new Float32Array(16);
-
-function drawMesh(vertices, colors, modelMatrix, mode3D) {
-  // MVP = proj * view * model
-  mat4Mul(mvpTemp,  viewMatrix,   modelMatrix);
-  mat4Mul(mvpTemp2, projMatrix,   mvpTemp);
-
-  gl.uniformMatrix4fv(uMVP, false, mvpTemp2);
-
-  // Position buffer
-  const vBuf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vBuf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
-
-  // Color buffer
-  const cBuf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, cBuf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(aCol);
-  gl.vertexAttribPointer(aCol, 4, gl.FLOAT, false, 0, 0);
-
-  gl.drawArrays(mode3D, 0, vertices.length / 3);
-
-  gl.deleteBuffer(vBuf);
-  gl.deleteBuffer(cBuf);
-}
-
-function makeModel(tx, ty, tz, rx, ry, rz, sx, sy, sz) {
-  const m = new Float32Array(16);
-  mat4Identity(m);
-
-  // Scale
-  const s = new Float32Array(16); mat4Identity(s);
-  s[0]=sx; s[5]=sy; s[10]=sz;
-
-  // Rotation X
-  const rx2 = new Float32Array(16); mat4Identity(rx2);
-  rx2[5]=Math.cos(rx); rx2[6]=Math.sin(rx);
-  rx2[9]=-Math.sin(rx); rx2[10]=Math.cos(rx);
-
-  // Rotation Y
-  const ry2 = new Float32Array(16); mat4Identity(ry2);
-  ry2[0]=Math.cos(ry); ry2[2]=-Math.sin(ry);
-  ry2[8]=Math.sin(ry); ry2[10]=Math.cos(ry);
-
-  // Translation
-  const t = new Float32Array(16); mat4Identity(t);
-  t[12]=tx; t[13]=ty; t[14]=tz;
-
-  let tmp = new Float32Array(16);
-  mat4Mul(tmp, rx2, s);
-  mat4Mul(m, ry2, tmp);
-  mat4Mul(tmp, t, m);
-  return tmp;
-}
-
-// Draw a single 3D arrow (shaft + head) pointing downward
-function drawArrow3D(x, y, z, color, length, phase2, userBeta, userGamma) {
-  const bob = Math.sin(phase * 2.1 + phase2) * 0.025;
-
-  // Build an orientation matrix that keeps arrow parallel to user
-  // The arrow always points "downward in world space" regardless of phone angle
-  const shaft_h = length * 0.55;
-  const head_r  = 0.028;
-
-  const shaftColor  = [...color];
-  const headColor   = [...color];
-
-  // Shaft — thin box going down
-  const shaftVerts = boxVerts(0, -(shaft_h/2), 0, 0.016, shaft_h, 0.016);
-  const shaftCols  = repeatColor(shaftColor, 36);
-  const shaftMat   = makeModel(x, y + bob, z, 0, 0, 0, 1, 1, 1);
-  drawMesh(shaftVerts, shaftCols, shaftMat, gl.TRIANGLES);
-
-  // Head — sphere approximation (octahedron)
-  const headVerts = octaVerts(0, -(shaft_h + head_r * 1.2), 0, head_r * 1.8, head_r);
-  const headCols  = repeatColor(headColor, headVerts.length / 3);
-  const headMat   = makeModel(x, y + bob, z, 0, 0, 0, 1, 1, 1);
-  drawMesh(headVerts, headCols, headMat, gl.TRIANGLES);
-}
-
-// Box made of triangles (6 faces * 2 triangles * 3 verts = 36 verts)
-function boxVerts(cx, cy, cz, w, h, d) {
-  const hx=w/2, hy=h/2, hz=d/2;
-  const x1=cx-hx,x2=cx+hx,y1=cy-hy,y2=cy+hy,z1=cz-hz,z2=cz+hz;
-  return [
-    x1,y2,z2, x2,y2,z2, x2,y1,z2,  x1,y2,z2, x2,y1,z2, x1,y1,z2, // front
-    x2,y2,z1, x1,y2,z1, x1,y1,z1,  x2,y2,z1, x1,y1,z1, x2,y1,z1, // back
-    x1,y2,z1, x1,y2,z2, x1,y1,z2,  x1,y2,z1, x1,y1,z2, x1,y1,z1, // left
-    x2,y2,z2, x2,y2,z1, x2,y1,z1,  x2,y2,z2, x2,y1,z1, x2,y1,z2, // right
-    x1,y2,z1, x2,y2,z1, x2,y2,z2,  x1,y2,z1, x2,y2,z2, x1,y2,z2, // top
-    x1,y1,z2, x2,y1,z2, x2,y1,z1,  x1,y1,z2, x2,y1,z1, x1,y1,z1, // bottom
+// ═══════════════════════════════════════════
+// DRAW 3D BOX (projected rectangle)
+// ═══════════════════════════════════════════
+function drawBox3D(cx,cy,cz, w,h,d, color, alpha) {
+  // Front face only for performance
+  const corners = [
+    project(cx-w/2, cy-h/2, cz+d/2),
+    project(cx+w/2, cy-h/2, cz+d/2),
+    project(cx+w/2, cy+h/2, cz+d/2),
+    project(cx-w/2, cy+h/2, cz+d/2),
   ];
+  if (corners.some(c=>!c)) return;
+  ctx.save();
+  ctx.globalAlpha = alpha || 0.7;
+  ctx.fillStyle   = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  corners.forEach(c => ctx.lineTo(c.x, c.y));
+  ctx.closePath();
+  ctx.stroke();
+  ctx.globalAlpha = (alpha||0.7) * 0.25;
+  ctx.fill();
+  ctx.restore();
 }
 
-// Octahedron for arrowhead
-function octaVerts(cx, cy, cz, ry, rh) {
-  const top=[cx,cy+rh,cz], bot=[cx,cy-rh,cz];
-  const pts = [
-    [cx+ry,cy,cz], [cx,cy,cz+ry],
-    [cx-ry,cy,cz], [cx,cy,cz-ry]
-  ];
-  const v = [];
-  for (let i=0;i<4;i++) {
-    const a=pts[i], b=pts[(i+1)%4];
-    v.push(...top,...a,...b);
-    v.push(...bot,...b,...a);
-  }
-  return v;
-}
-
-function repeatColor(col, count) {
-  const out = [];
-  for (let i=0;i<count;i++) out.push(...col);
-  return out;
-}
-
-// Draw a flat plane indicator (thin box)
-function drawPlane(x, y, z, w, d, color, tilt) {
-  const verts = boxVerts(0, 0, 0, w, 0.005, d);
-  const cols  = repeatColor(color, 36);
-  const mat   = makeModel(x, y, z, tilt||0, 0, 0, 1, 1, 1);
-  drawMesh(verts, cols, mat, gl.TRIANGLES);
-}
-
-// Draw vertical line
-function drawLine(x1,y1,z1, x2,y2,z2, color) {
-  const verts = [x1,y1,z1, x2,y2,z2];
-  const cols  = [...color,...color];
-  const mat   = makeModel(0,0,0,0,0,0,1,1,1);
-  drawMesh(verts, cols, mat, gl.LINES);
-}
-
-// Draw grid of lines (for guides)
+// ═══════════════════════════════════════════
+// STRUCTURAL FRAME GUIDES
+// ═══════════════════════════════════════════
 function drawGuides() {
-  const gc = C.guide;
-  for (let i=-3;i<=3;i++) {
-    drawLine(i*0.4,-0.5,-2.5, i*0.4,-0.5,2.5, gc);
-    drawLine(-1.5,-0.5,i*0.4, 1.5,-0.5,i*0.4, gc);
+  const W = cv.width, H = cv.height;
+
+  // Vertical column guides
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4,9]);
+  [-200,0,200].forEach(x => {
+    const t = project(x, -300, 0);
+    const b = project(x,  300, 0);
+    if (t && b) {
+      ctx.beginPath();
+      ctx.moveTo(t.x, t.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    }
+  });
+  // Horizontal beam guides
+  [-100, 80].forEach(y => {
+    const l = project(-300, y, 0);
+    const r = project( 300, y, 0);
+    if (l && r) {
+      ctx.beginPath();
+      ctx.moveTo(l.x, l.y);
+      ctx.lineTo(r.x, r.y);
+      ctx.stroke();
+    }
+  });
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Floor line
+  ctx.save();
+  ctx.strokeStyle = 'rgba(74,158,255,0.22)';
+  ctx.lineWidth = 1.5;
+  const fl = project(-300, 200, 0);
+  const fr = project( 300, 200, 0);
+  if (fl && fr) {
+    ctx.beginPath();
+    ctx.moveTo(fl.x, fl.y);
+    ctx.lineTo(fr.x, fr.y);
+    ctx.stroke();
   }
+  ctx.fillStyle = 'rgba(74,158,255,0.4)';
+  ctx.font = '600 10px -apple-system,sans-serif';
+  ctx.textAlign = 'left';
+  if (fl) ctx.fillText('FLOOR LEVEL', fl.x + 8, fl.y - 4);
+  ctx.restore();
 }
 
-// ═══════════════════════════════════════════════════
-// ELEMENT DRAWING — each type with its arrow pattern
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// ELEMENT DRAWING
+// ═══════════════════════════════════════════
 
-function drawCeilingElement(el) {
-  // CEILING: Full 5×5 plane of arrows across slab
-  // Arrows stay locked at the ceiling height (positive Y in world)
-  const {wx, wy, wz} = el;
-  const rows = 5, cols2 = 5, gap = 0.22;
+// CEILING — full 5×5 plane of arrows
+function drawCeiling(el) {
+  const {sx, sy} = el;
+  const rows = 5, cols = 5;
+  const gapX = 52, gapZ = 52;
 
-  // Draw ceiling slab plane first
-  const planeColor = [...C.dead]; planeColor[3] = 0.18;
-  drawPlane(wx, wy+0.02, wz, cols2*gap+0.1, rows*gap+0.1, planeColor);
+  // Ceiling plane indicator
+  ctx.save();
+  ctx.strokeStyle = COL.dead;
+  ctx.lineWidth   = 1.5;
+  ctx.globalAlpha = 0.45;
+  ctx.setLineDash([6,5]);
 
-  // Ceiling border line
-  const lineColor = [...C.dead]; lineColor[3] = 0.5;
-  drawLine(wx-0.6, wy, wz-0.6,  wx+0.6, wy, wz-0.6, lineColor);
-  drawLine(wx-0.6, wy, wz+0.6,  wx+0.6, wy, wz+0.6, lineColor);
-  drawLine(wx-0.6, wy, wz-0.6,  wx-0.6, wy, wz+0.6, lineColor);
-  drawLine(wx+0.6, wy, wz-0.6,  wx+0.6, wy, wz+0.6, lineColor);
+  // Draw a projected rectangle for the ceiling slab
+  const x3 = sx - cv.width/2;
+  const y3 = sy - cv.height/2;
+  [-1,1].forEach(side => {
+    const p1 = project(x3 - (cols*gapX/2), y3, -side*50);
+    const p2 = project(x3 + (cols*gapX/2), y3, -side*50);
+    if (p1&&p2) { ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+  });
+  [-1,1].forEach(side => {
+    const p1 = project(x3 + side*(cols*gapX/2), y3, -50);
+    const p2 = project(x3 + side*(cols*gapX/2), y3,  50);
+    if (p1&&p2) { ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+  });
+  ctx.setLineDash([]);
+  ctx.restore();
 
-  // 5×5 grid of arrows pointing down from ceiling
-  for (let r=0; r<rows; r++) {
-    for (let c=0; c<cols2; c++) {
-      const ax = wx + (c - (cols2-1)/2) * gap;
-      const az = wz + (r - (rows-1)/2) * gap;
-      const ph = r * 0.7 + c * 0.5;
-      drawArrow3D(ax, wy, az, C.dead, 0.28, ph);
+  // Ceiling label
+  ctx.save();
+  ctx.font = '600 10px -apple-system,sans-serif';
+  ctx.fillStyle = 'rgba(74,158,255,0.7)';
+  ctx.textAlign = 'left';
+  ctx.fillText('CEILING SLAB  ↓ Dead Load', el.sx - (cols*gapX/2)*0.5, el.sy - 14);
+  ctx.restore();
+
+  // 5×5 grid of arrows
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const ox = (c - (cols-1)/2) * gapX;
+      const oz = (r - (rows-1)/2) * gapZ * 0.3; // Z depth spread
+      const px = sx + ox;
+      const x3a = px - cv.width/2;
+      const y3a = sy - cv.height/2;
+      const ph  = r * 0.7 + c * 0.55;
+
+      drawArrowScreen(px, sy, COL.dead, 48, ph, 'down', oz);
     }
   }
 }
 
-function drawSlabElement(el) {
-  // SLAB: Grid of adjacent arrows across beam width AND depth
-  // Shows load distribution across the full slab face
-  const {wx, wy, wz} = el;
+// SLAB — 3×4 grid of adjacent arrows
+function drawSlab(el) {
+  const {sx, sy} = el;
+  const rows = 3, cols = 4;
+  const gapX = 42, gapZ = 35;
 
-  // Slab body — flat yellow plane
-  const slabColor = [...C.slab]; slabColor[3] = 0.7;
-  drawPlane(wx, wy, wz, 0.85, 0.06, slabColor);
+  // Slab body
+  ctx.save();
+  ctx.strokeStyle = COL.slab;
+  ctx.fillStyle   = COL.slab;
+  ctx.lineWidth   = 2;
+  ctx.globalAlpha = 0.82;
+  const slabW = cols * gapX + 20;
+  const slabH = 12;
+  ctx.strokeRect(sx - slabW/2, sy - slabH/2, slabW, slabH);
+  ctx.globalAlpha = 0.12;
+  ctx.fillRect(sx - slabW/2, sy - slabH/2, slabW, slabH);
+  ctx.restore();
 
-  // Adjacent dead load arrows in a 4×2 grid below slab
-  const rows = 2, cols2 = 5, gapX = 0.16, gapZ = 0.18;
-  for (let r=0; r<rows; r++) {
-    for (let c=0; c<cols2; c++) {
-      const ax = wx + (c - (cols2-1)/2) * gapX;
-      const az = wz + (r - (rows-1)/2) * gapZ;
-      const ay = wy - 0.04;
-      const ph = r * 0.8 + c * 0.55;
-      drawArrow3D(ax, ay, az, C.slab, 0.22, ph);
+  // Label
+  ctx.save();
+  ctx.font = 'bold 10px -apple-system,sans-serif';
+  ctx.fillStyle = COL.slab;
+  ctx.textAlign = 'center';
+  ctx.globalAlpha = 0.82;
+  ctx.fillText('SLAB', sx, sy - 20);
+  ctx.restore();
+
+  // Grid of dead load arrows below slab — parallel to slab face
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const ax = sx + (c - (cols-1)/2) * gapX;
+      const ay = sy + slabH/2;
+      const ph = r * 0.8 + c * 0.6;
+      const depthOff = r * gapZ;
+      drawArrowScreen(ax, ay + depthOff * 0.15, COL.slab, 40 - r*4, ph, 'down', r * gapZ * 0.3);
     }
   }
 
-  // Reaction arrows (upward — green) at beam ends
-  for (let side=-1; side<=1; side+=2) {
-    const rx = wx + side * 0.40;
-    // upward arrow — invert direction by flipping model
-    const bob = Math.sin(phase * 2.1 + side * 1.3) * 0.025;
-    const shaft_h = 0.18;
-    const upColor = [...C.react];
-    const shaftV = boxVerts(0, shaft_h/2, 0, 0.014, shaft_h, 0.014);
-    const shaftC = repeatColor(upColor, 36);
-    const mat    = makeModel(rx, wy-0.18+bob, wz, 0,0,0,1,1,1);
-    drawMesh(shaftV, shaftC, mat, gl.TRIANGLES);
+  // Reaction arrows (upward) at both ends
+  [-1, 1].forEach(side => {
+    const rx = sx + side * (slabW/2 - 10);
+    drawArrowScreen(rx, sy + 65, COL.react, 32, side*1.2, 'up', 0);
+  });
+}
+
+// COLUMN — vertical stack of 5 arrows
+function drawColumn(el) {
+  const {sx, sy} = el;
+
+  // Column body — vertical line with thickness
+  ctx.save();
+  ctx.strokeStyle = COL.col;
+  ctx.lineWidth   = 8;
+  ctx.globalAlpha = 0.65;
+  ctx.lineCap     = 'round';
+  ctx.beginPath();
+  ctx.moveTo(sx, sy - 20);
+  ctx.lineTo(sx, sy + 160);
+  ctx.stroke();
+  ctx.restore();
+
+  // Cross-section highlight at tap
+  ctx.save();
+  ctx.strokeStyle = COL.col;
+  ctx.lineWidth   = 2.5;
+  ctx.globalAlpha = 0.9;
+  ctx.strokeRect(sx - 16, sy - 16, 32, 32);
+  ctx.fillStyle = COL.col;
+  ctx.globalAlpha = 0.15;
+  ctx.fillRect(sx - 16, sy - 16, 32, 32);
+  ctx.restore();
+
+  // STACK of 5 arrows — each one lower = slightly bigger
+  // Shows load accumulating as it travels down
+  const stackCount = 5;
+  for (let i = 0; i < stackCount; i++) {
+    const ay  = sy - 70 + i * 26;
+    const len = 36 + i * 4; // grows slightly larger toward bottom
+    const ph  = i * 0.6;
+    drawArrowScreen(sx, ay, COL.col, len, ph, 'down', 0);
+  }
+
+  // Column label
+  ctx.save();
+  ctx.font = 'bold 10px -apple-system,sans-serif';
+  ctx.fillStyle = COL.col;
+  ctx.textAlign = 'center';
+  ctx.globalAlpha = 0.82;
+  ctx.fillText('COLUMN', sx, sy - 82);
+  ctx.restore();
+
+  // Foundation block
+  ctx.save();
+  ctx.strokeStyle = COL.col;
+  ctx.fillStyle   = COL.col;
+  ctx.lineWidth   = 2;
+  ctx.globalAlpha = 0.55;
+  ctx.strokeRect(sx - 20, sy + 162, 40, 14);
+  ctx.globalAlpha = 0.1;
+  ctx.fillRect(sx - 20, sy + 162, 40, 14);
+  ctx.font = '600 9px -apple-system,sans-serif';
+  ctx.fillStyle = COL.col;
+  ctx.globalAlpha = 0.6;
+  ctx.textAlign = 'center';
+  ctx.fillText('FDN', sx, sy + 172);
+  ctx.restore();
+
+  // Dashed load path line down to foundation
+  ctx.save();
+  ctx.strokeStyle = COL.col;
+  ctx.lineWidth   = 1;
+  ctx.globalAlpha = 0.25;
+  ctx.setLineDash([3,5]);
+  ctx.beginPath();
+  ctx.moveTo(sx, sy + 18);
+  ctx.lineTo(sx, sy + 162);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Reaction arrow upward at foundation
+  drawArrowScreen(sx, sy + 162, COL.react, 28, 0.5, 'up', 0);
+}
+
+// LIVE LOAD — person silhouette + arrows
+function drawLive(el) {
+  const {sx, sy} = el;
+  const lc = COL.live;
+
+  // Person silhouette
+  ctx.save();
+  ctx.strokeStyle = lc;
+  ctx.lineWidth   = 2.5;
+  ctx.lineCap     = 'round';
+  ctx.globalAlpha = 0.85;
+
+  // Head
+  ctx.beginPath();
+  ctx.arc(sx, sy - 68, 13, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,107,53,0.15)';
+  ctx.fill();
+  ctx.stroke();
+
+  // Body
+  ctx.beginPath(); ctx.moveTo(sx, sy-55); ctx.lineTo(sx, sy-18); ctx.stroke();
+  // Arms
+  ctx.beginPath(); ctx.moveTo(sx-18, sy-40); ctx.lineTo(sx+18, sy-40); ctx.stroke();
+  // Left leg
+  ctx.beginPath(); ctx.moveTo(sx, sy-18); ctx.lineTo(sx-14, sy+8); ctx.stroke();
+  // Right leg
+  ctx.beginPath(); ctx.moveTo(sx, sy-18); ctx.lineTo(sx+14, sy+8); ctx.stroke();
+
+  // Bounding dashed box
+  ctx.setLineDash([5,5]);
+  ctx.globalAlpha = 0.35;
+  ctx.strokeRect(sx-28, sy-88, 56, 102);
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // 3 live load arrows above head — spread
+  const bob = Math.sin(phase * 2.1) * 6;
+  [-22, 0, 22].forEach((off, i) => {
+    drawArrowScreen(sx+off, sy-94+bob, lc, 30, i*1.1, 'down', 0);
+  });
+
+  // Label
+  ctx.save();
+  ctx.font = 'bold 10px -apple-system,sans-serif';
+  ctx.fillStyle = lc;
+  ctx.textAlign = 'center';
+  ctx.globalAlpha = 0.88;
+  ctx.fillText('LIVE LOAD ↓', sx, sy - 102 + bob);
+  ctx.restore();
+
+  // Foot weight arrows
+  ctx.globalAlpha = 0.45;
+  drawArrowScreen(sx-10, sy+10, lc, 26, 0.8, 'down', 0);
+  drawArrowScreen(sx+10, sy+10, lc, 26, 1.2, 'down', 0);
+}
+
+// ═══════════════════════════════════════════
+// SCREEN-SPACE ARROW with gyro offset
+// Draws arrow on screen using gyro to shift position
+// ═══════════════════════════════════════════
+function drawArrowScreen(sx, sy, color, length, ph, dir, depthBias) {
+  depthBias = depthBias || 0;
+
+  // Apply gyro offset to simulate 3D position locking
+  // When phone tilts, elements shift to stay in world space
+  const pitchShift = pitch * 160 + depthBias * Math.sin(pitch) * 0.8;
+  const yawShift   = yaw   * 220;
+
+  const ax = sx + yawShift;
+  const ay = sy + pitchShift;
+
+  const bob  = Math.sin(phase * 2.1 + (ph||0)) * 7;
+  const sign = (dir === 'up') ? -1 : 1;
+  const tipX = ax;
+  const tipY = ay + sign * (length + bob);
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle   = color;
+  ctx.lineWidth   = 2;
+  ctx.lineCap     = 'round';
+  ctx.globalAlpha = 0.90;
+
+  // Shaft
+  ctx.beginPath();
+  ctx.moveTo(ax, ay + bob);
+  ctx.lineTo(ax, tipY - sign * 10);
+  ctx.stroke();
+
+  // Arrowhead
+  const hs = 9;
+  ctx.beginPath();
+  ctx.moveTo(tipX, tipY);
+  ctx.lineTo(tipX - hs, tipY - sign * hs * 1.3);
+  ctx.lineTo(tipX + hs, tipY - sign * hs * 1.3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════
+// RENDER LOOP
+// ═══════════════════════════════════════════
+function loop() {
+  if (!running) return;
+  phase += 0.055;
+
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  drawGuides();
+
+  elements.forEach(el => {
+    switch(el.type) {
+      case 'ceil': drawCeiling(el); break;
+      case 'slab': drawSlab(el);    break;
+      case 'col':  drawColumn(el);  break;
+      case 'live': drawLive(el);    break;
+    }
+  });
+
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════
+async function startApp() {
+  const btn = document.getElementById('startbtn');
+  btn.textContent = 'Opening…'; btn.disabled = true;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } }, audio: false
+    }).catch(() => navigator.mediaDevices.getUserMedia({
+      video: true, audio: false
+    }));
+
+    cam = document.getElementById('cam');
+    cam.srcObject = stream;
+    cam.style.display = 'block';
+    await new Promise(r => {
+      cam.onloadedmetadata = () => { cam.play(); r(); };
+      setTimeout(r, 3000);
+    });
+  } catch(e) {
+    const msg = e.name === 'NotAllowedError'
+      ? 'Camera blocked. Tap lock icon in Chrome → Allow Camera → refresh.'
+      : 'Camera error: ' + e.message;
+    document.getElementById('errmsg').style.display = 'block';
+    document.getElementById('errmsg').textContent   = msg;
+    btn.textContent = 'Try Again'; btn.disabled = false;
+    return;
+  }
+
+  cv  = document.getElementById('cv');
+  cv.width  = window.innerWidth;
+  cv.height = window.innerHeight;
+  ctx = cv.getContext('2d');
+  cv.style.display = 'block';
+
+  // Gyro
+  initGyro();
+
+  // Touch/click on canvas
+  cv.addEventListener('touchstart', onTap, { passive: false });
+  cv.addEventListener('click',      onTap);
+
+  document.getElementById('start').style.display   = 'none';
+  document.getElementById('topbar').style.display  = 'flex';
+  document.getElementById('toolbar').style.display = 'block';
+  toolbarH = document.getElementById('toolbar').offsetHeight;
+
+  running = true;
+  loop();
+  setTimeout(() => toast('Select a mode and tap the structure'), 500);
+}
+
+// ═══════════════════════════════════════════
+// GYRO
+// ═══════════════════════════════════════════
+function initGyro() {
+  const listen = () => {
+    window.addEventListener('deviceorientation', e => {
+      if (e.beta !== null) {
+        // Convert to radians, normalise for typical phone hold angle
+        pitch = ((e.beta  - 45) * Math.PI / 180) * 0.4;  // -45 = normal hold
+        yaw   =  (e.gamma       * Math.PI / 180) * 0.35;
+        roll  =  (e.alpha       * Math.PI / 180);
+        if (!gyroOn) {
+          gyroOn = true;
+          document.getElementById('gyrobadge').style.display = 'block';
+          toast('Gyroscope active — arrows locked in 3D space');
+        }
+      }
+    }, true);
+  };
+
+  if (typeof DeviceOrientationEvent !== 'undefined') {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(s => { if (s==='granted') listen(); })
+        .catch(() => listen());
+    } else {
+      listen();
+    }
   }
 }
 
-function drawColumnElement(el) {
-  // COLUMN: Vertical STACK of arrows showing axial load path
-  // From column head all the way down through column to foundation
-  const {wx, wy, wz} = el;
+// ═══════════════════════════════════════════
+// TAP HANDLER
+// ═══════════════════════════════════════════
+function onTap(e) {
+  if (mode === 'view') return;
+  e.preventDefault();
 
-  // Column body — thin vertical box
-  const colH = 1.1;
-  const colColor = [...C.col]; colColor[3] = 0.65;
-  const colVerts = boxVerts(0, -colH/2, 0, 0.055, colH, 0.055);
-  const colCols  = repeatColor(colColor, 36);
-  const colMat   = makeModel(wx, wy-0.5, wz, 0,0,0,1,1,1);
-  drawMesh(colVerts, colCols, colMat, gl.TRIANGLES);
+  let sx, sy;
+  if (e.touches) {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+  } else {
+    sx = e.clientX;
+    sy = e.clientY;
+  }
 
-  // Cross section at t
+  if (sy > window.innerHeight - toolbarH - 10) return;
+
+  elements.push({ type: mode, sx, sy });
+
+  const msgs = {
+    ceil: 'Ceiling placed — 5×5 plane of dead load arrows',
+    slab: 'Slab placed — 3×4 grid of adjacent arrows',
+    col:  'Column placed — stacked axial load arrows to foundation',
+    live: 'Live load placed — person silhouette with arrows'
+  };
+  toast(msgs[mode]);
+}
+
+// ═══════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════
+function setMode(m) {
+  mode = m;
+  const cls = {ceil:'a-ceil',slab:'a-slab',col:'a-col',live:'a-live',view:'a-view'};
+  const hints = {
+    ceil:'Tap on the ceiling surface',
+    slab:'Tap on any beam or slab',
+    col: 'Tap on any column',
+    live:'Tap where person stands',
+    view:''
+  };
+  Object.keys(cls).forEach(k => {
+    const b = document.getElementById('mb-'+k);
+    b.className = 'mbtn';
+    if (k===m) b.classList.add(cls[k]);
+  });
+  const hint = document.getElementById('modehint');
+  if (m === 'view') {
+    hint.style.display = 'none';
+    cv.style.pointerEvents = 'none';
+  } else {
+    hint.textContent   = hints[m];
+    hint.style.display = 'block';
+    cv.style.pointerEvents = 'all';
+  }
+  if (m !== 'view') toast(hints[m]);
+}
+
+function undo() {
+  if (!elements.length) { toast('Nothing to undo'); return; }
+  elements.pop();
+  toast('Removed last element');
+}
+
+function clearAll() {
+  elements = [];
+  toast('All elements cleared');
+}
+
+let toastT = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+window.addEventListener('resize', () => {
+  if (!cv) return;
+  cv.width  = window.innerWidth;
+  cv.height = window.innerHeight;
+  toolbarH  = document.getElementById('toolbar')?.offsetHeight || 0;
+});
+</script>
+</body>
+</html>
