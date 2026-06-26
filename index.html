@@ -481,9 +481,6 @@ function createMarker(type, color, dimension) {
         group.add(makeArrow(x, 0, z, mat, true, 0.85));
       }
     }
-    const halfW = (cols-1)/2 * colSpacing;
-    group.add(makeArrow(-halfW - 0.08, -0.03, 0, reactMat, false, 0.7));
-    group.add(makeArrow( halfW + 0.08, -0.03, 0, reactMat, false, 0.7));
   } else if (type === 'col') {
     const height = dimension || 1.0;
     const count = 5;
@@ -492,7 +489,6 @@ function createMarker(type, color, dimension) {
       const growScale = 0.7 + (i / (count-1)) * 0.4;
       group.add(makeArrow(0, -i * vSpacing, 0, mat, true, growScale));
     }
-    group.add(makeArrow(0, -height - 0.05, 0, reactMat, false, 0.7));
   } else {
     const personMat = new THREE.MeshStandardMaterial({ color, transparent:true, opacity:0.85 });
 
