@@ -186,6 +186,14 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 }
 #resizeConfirm{background:linear-gradient(135deg,#4A9EFF,#A78BFA);color:#fff;}
 #resizeCancel{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);}
+#modebadge{
+  position:fixed;top:90px;right:14px;z-index:12;
+  background:rgba(0,0,0,.75);color:#4A9EFF;
+  padding:4px 10px;border-radius:14px;
+  font-size:11px;font-weight:800;
+  border:1px solid rgba(74,158,255,.4);
+  pointer-events:none;
+}
 </style>
 </head>
 <body>
@@ -228,6 +236,7 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
     <button id="undobtn">↩ Undo</button>
   </div>
   <div id="statusbar">Initializing...</div>
+  <div id="modebadge">MODE: view</div>
   <div id="modehint"></div>
 
   <div id="toolbar">
@@ -404,7 +413,9 @@ function initThree() {
 
 async function onSelect() {
   try {
-    if (performance.now() - lastModeChangeTime < 500) {
+    const sinceMode = performance.now() - lastModeChangeTime;
+    if (sinceMode < 700) {
+      setStatus('Ignored tap (' + Math.round(sinceMode) + 'ms after mode switch)');
       return; // ignore spurious select caused by the same tap that hit a mode button
     }
     if (mode === 'view') return;
@@ -609,6 +620,7 @@ function render(timestamp, frame) {
 window.setMode = function(m) {
   lastModeChangeTime = performance.now();
   document.getElementById('resizePanel').style.display = 'none';
+  document.getElementById('modebadge').textContent = 'MODE: ' + m + ' (switched ' + new Date().toLocaleTimeString() + ')';
 
   mode = m;
   const classes = { ceil:'a-ceil', slab:'a-slab', col:'a-col', live:'a-live', view:'a-view' };
