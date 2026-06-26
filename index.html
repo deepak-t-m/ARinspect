@@ -219,7 +219,7 @@ const reticleEl  = document.getElementById('reticle3d');
 const counterEl  = document.getElementById('counterbadge');
 const toastEl    = document.getElementById('toast');
 
-startBtn.addEventListener('pointerdown', startApp);
+startBtn.addEventListener('click', startApp);
 document.getElementById('exitbtn').addEventListener('pointerdown', () => {
   if (session) session.end();
 });
@@ -246,14 +246,12 @@ async function startApp() {
     showErr('WebXR not available — open this page in Chrome on Android.');
     return;
   }
-  const supported = await navigator.xr.isSessionSupported('immersive-ar').catch(()=>false);
-  if (!supported) {
-    showErr('AR not supported here. Update Chrome and "Google Play Services for AR" from the Play Store.');
-    return;
-  }
 
   initThree();
 
+  // IMPORTANT: requestSession must be called immediately within the user
+  // gesture, with no awaited calls before it — otherwise Chrome reports
+  // "requested session requires user activation" even though you just tapped.
   try {
     session = await navigator.xr.requestSession('immersive-ar', {
       requiredFeatures: ['hit-test'],
@@ -261,7 +259,7 @@ async function startApp() {
       domOverlay: { root: overlayEl }
     });
   } catch(e) {
-    showErr('Could not start AR session: ' + e.message);
+    showErr('Could not start AR session: ' + e.message + ' — try updating Chrome and "Google Play Services for AR".');
     return;
   }
 
