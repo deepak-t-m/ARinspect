@@ -380,43 +380,18 @@ function initThree() {
 }
 
 async function onSelect() {
-  setStatus('TAP DETECTED (mode=' + mode + ', pending=' + (pending?'yes':'no') + ', reticle=' + reticle.visible + ')');
   try {
     if (mode === 'view') return;
     if (!reticle.visible) { toast('No surface detected here yet'); return; }
-    if (pending) { toast('Finish current placement first'); return; }
 
     const pos = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
     const color = COLORS[mode];
 
-    if (mode === 'slab' || mode === 'col') {
-      pending = { type: mode, color, pos, dimension: 1.0, obj: null };
-      pending.obj = createMarker(mode, color, pending.dimension);
-      pending.obj.position.copy(pos);
-      scene.add(pending.obj);
-
-      const panel = document.getElementById('resizePanel');
-      const title = document.getElementById('resizeTitle');
-      const slider = document.getElementById('resizeSlider');
-      title.textContent = mode === 'slab' ? 'Slab width' : 'Column height';
-      slider.min = mode === 'slab' ? 0.3 : 0.5;
-      slider.max = mode === 'slab' ? 3 : 3.5;
-      slider.value = pending.dimension;
-      updateResizeLabel(pending.dimension, 'm');
-      panel.style.display = 'block';
-      document.getElementById('toolbar').style.display = 'none';
-      setStatus('Drag slider to size — then tap Place');
-      return;
-    }
-
-    await placeFinal(mode, color, pos, null);
+    await placeFinal(mode, color, pos, 1.0);
   } catch(e) {
     console.error('onSelect error', e);
     toast('Error placing: ' + e.message);
     setStatus('Error: ' + e.message);
-    pending = null;
-    document.getElementById('resizePanel').style.display = 'none';
-    document.getElementById('toolbar').style.display = 'block';
   }
 }
 
@@ -451,38 +426,9 @@ async function placeFinal(type, color, pos, dimension) {
   }
 }
 
-window.cancelResize = function() {
-  if (pending && pending.obj) scene.remove(pending.obj);
-  pending = null;
-  document.getElementById('resizePanel').style.display = 'none';
-  document.getElementById('toolbar').style.display = 'block';
-  setStatus('Move phone to find a surface');
-};
-
-window.confirmResize = async function() {
-  if (!pending) return;
-  scene.remove(pending.obj);
-  document.getElementById('resizePanel').style.display = 'none';
-  document.getElementById('toolbar').style.display = 'block';
-  const p = pending;
-  pending = null;
-  await placeFinal(p.type, p.color, p.pos, p.dimension);
-};
-
 function updateResizeLabel(val, unit) {
   document.getElementById('resizeVal').textContent = parseFloat(val).toFixed(1) + ' ' + unit;
 }
-
-document.addEventListener('input', (e) => {
-  if (e.target && e.target.id === 'resizeSlider' && pending) {
-    pending.dimension = parseFloat(e.target.value);
-    updateResizeLabel(pending.dimension, 'm');
-    scene.remove(pending.obj);
-    pending.obj = createMarker(pending.type, pending.color, pending.dimension);
-    pending.obj.position.copy(pending.pos);
-    scene.add(pending.obj);
-  }
-});
 
 // ═══════════════════════════════════════════
 // MARKER CREATION — richer visual density
@@ -605,11 +551,11 @@ function render(timestamp, frame) {
         reticle.visible = true;
         reticle.matrix.fromArray(pose.transform.matrix);
         reticleStatusEl.classList.add('found');
-        if (mode !== 'view' && !pending) setStatus('Surface found — tap to place');
+        if (mode !== 'view') setStatus('Surface found — tap to place');
       } else {
         reticle.visible = false;
         reticleStatusEl.classList.remove('found');
-        if (mode !== 'view' && !pending) setStatus('Move phone slowly to find a surface');
+        if (mode !== 'view') setStatus('Move phone slowly to find a surface');
       }
     }
 
@@ -634,21 +580,12 @@ function render(timestamp, frame) {
         item.object.quaternion.identity();
       }
     });
-
-    if (pending && (pending.type === 'slab') && pending.obj) {
-      const dx = camPos.x - pending.obj.position.x;
-      const dz = camPos.z - pending.obj.position.z;
-      pending.obj.rotation.y = Math.atan2(dx, dz);
-    }
   }
   renderer.render(scene, camera);
 }
 
 window.setMode = function(m) {
-  if (pending && pending.obj) { scene.remove(pending.obj); }
-  pending = null;
   document.getElementById('resizePanel').style.display = 'none';
-  document.getElementById('toolbar').style.display = 'block';
 
   mode = m;
   const classes = { ceil:'a-ceil', slab:'a-slab', col:'a-col', live:'a-live', view:'a-view' };
