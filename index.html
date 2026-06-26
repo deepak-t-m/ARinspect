@@ -225,18 +225,18 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
 <div id="overlay">
   <div id="topbar">
     <span id="appname">ARInspect</span>
-    <button id="undobtn" onclick="undo()">↩ Undo</button>
+    <button id="undobtn">↩ Undo</button>
   </div>
   <div id="statusbar">Initializing...</div>
   <div id="modehint"></div>
 
   <div id="toolbar">
     <div id="moderow">
-      <div class="mbtn" id="mb-ceil" onclick="setMode('ceil')"><span class="ic">↓</span>Ceiling</div>
-      <div class="mbtn" id="mb-slab" onclick="setMode('slab')"><span class="ic">▬</span>Slab</div>
-      <div class="mbtn" id="mb-col" onclick="setMode('col')"><span class="ic">▪</span>Column</div>
-      <div class="mbtn" id="mb-live" onclick="setMode('live')"><span class="ic">🧍</span>Live</div>
-      <div class="mbtn a-view" id="mb-view" onclick="setMode('view')"><span class="ic">👁</span>View</div>
+      <div class="mbtn" id="mb-ceil" data-mode="ceil"><span class="ic">↓</span>Ceiling</div>
+      <div class="mbtn" id="mb-slab" data-mode="slab"><span class="ic">▬</span>Slab</div>
+      <div class="mbtn" id="mb-col" data-mode="col"><span class="ic">▪</span>Column</div>
+      <div class="mbtn" id="mb-live" data-mode="live"><span class="ic">🧍</span>Live</div>
+      <div class="mbtn a-view" id="mb-view" data-mode="view"><span class="ic">👁</span>View</div>
     </div>
     <div id="legend">
       <div class="li"><div class="ld" style="background:#4A9EFF;"></div>Dead load (ceiling)</div>
@@ -245,7 +245,7 @@ h1 span{background:linear-gradient(120deg,#4A9EFF,#A78BFA,#FF6B35);
       <div class="li"><div class="ld" style="background:#FFCC00;"></div>Slab dead load</div>
       <div class="li"><div class="ld" style="background:#44CC78;border-radius:50%;"></div>Upward reaction</div>
     </div>
-    <button id="clrbtn" onclick="clearAll()">Clear all</button>
+    <button id="clrbtn">Clear all</button>
   </div>
 
   <div id="reticleStatus"></div>
@@ -268,7 +268,8 @@ let camera, scene, renderer, session;
 let reticle, hitTestSource = null, hitTestSourceRequested = false;
 let placedItems = [];
 let mode = 'view';
-let pending = null; // { type, color, pos, dimension, obj }
+let pending = null; // unused, kept for compatibility
+let lastModeChangeTime = 0;
 
 const COLORS = { ceil:0x4A9EFF, slab:0xFFCC00, col:0xA78BFA, live:0xFF6B35 };
 const REACT_COLOR = 0x44CC78;
@@ -372,6 +373,28 @@ function initThree() {
   controller.addEventListener('select', onSelect);
   scene.add(controller);
 
+  // Wire up mode buttons with pointerdown (fires earlier than click, and we
+  // stop propagation so the underlying AR session never sees this tap as a placement)
+  document.querySelectorAll('.mbtn[data-mode]').forEach(btn => {
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.setMode(btn.getAttribute('data-mode'));
+    });
+  });
+
+  document.getElementById('undobtn').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.undo();
+  });
+
+  document.getElementById('clrbtn').addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.clearAll();
+  });
+
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
@@ -381,6 +404,9 @@ function initThree() {
 
 async function onSelect() {
   try {
+    if (performance.now() - lastModeChangeTime < 500) {
+      return; // ignore spurious select caused by the same tap that hit a mode button
+    }
     if (mode === 'view') return;
     if (!reticle.visible) { toast('No surface detected here yet'); return; }
 
@@ -581,6 +607,7 @@ function render(timestamp, frame) {
 }
 
 window.setMode = function(m) {
+  lastModeChangeTime = performance.now();
   document.getElementById('resizePanel').style.display = 'none';
 
   mode = m;
